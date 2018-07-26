@@ -33,6 +33,15 @@ This theme is pretty basic and covers all of the essentials. All you have to do 
     </item>
     
     <item>
+      <title>Hello World</title>
+      <link>/post/test/</link>
+      <pubDate>Mon, 17 Sep 1990 00:00:00 +0000</pubDate>
+      
+      <guid>/post/test/</guid>
+      <description>This is a new test.</description>
+    </item>
+    
+    <item>
       <title>Hello Friend</title>
       <link>/post/hello/</link>
       <pubDate>Wed, 17 Sep 1986 00:00:00 +0000</pubDate>

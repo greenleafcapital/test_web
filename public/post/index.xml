@@ -6,10 +6,19 @@
     <description>Recent content in Posts on Hello Friend</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 17 Sep 1986 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 17 Sep 1990 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Hello World</title>
+      <link>/post/test/</link>
+      <pubDate>Mon, 17 Sep 1990 00:00:00 +0000</pubDate>
+      
+      <guid>/post/test/</guid>
+      <description>This is a new test.</description>
+    </item>
     
     <item>
       <title>Hello Friend</title>
