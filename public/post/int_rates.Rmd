@@ -6,7 +6,7 @@ output:
   pdf_document: default
   html_document: default
 description: "Can interest rates predict bear markets?"
-cover: "yellow_light.jpg"
+cover: "past bear-1.png"
     
 ---
 ```{r load data, echo=FALSE, include=FALSE, warning=FALSE}

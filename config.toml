@@ -20,6 +20,6 @@ ignoreFiles = ["\\.Rmd$", "\\.Rmarkdown$", "_files$", "_cache$"]
     name = "About"
     url = "/about"
   [[menu.main]]
-    identifier = "showcase"
-    name = "Showcase"
+    identifier = "portfolio"
+    name = "Portfolio"
     url = "/showcase"

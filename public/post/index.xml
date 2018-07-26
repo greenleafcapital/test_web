@@ -21,33 +21,5 @@
  How do interest rates affect Market Valuations? It has been said many times that it is impossible to predict a bear market. Many on Wall Street spend enormous amount of time and money on this very activity. Although it may be difficult to predict the bear market one can evaluate the conditions that could lead to a bear market. What do I mean by that?</description>
     </item>
     
-    <item>
-      <title>Hello R Markdown</title>
-      <link>/post/2015-07-23-r-rmarkdown/</link>
-      <pubDate>Thu, 23 Jul 2015 21:13:14 -0500</pubDate>
-      
-      <guid>/post/2015-07-23-r-rmarkdown/</guid>
-      <description>R Markdown This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see http://rmarkdown.rstudio.com.
-You can embed an R code chunk like this:
-summary(cars) ## speed dist ## Min. : 4.0 Min. : 2.00 ## 1st Qu.:12.0 1st Qu.: 26.00 ## Median :15.0 Median : 36.00 ## Mean :15.4 Mean : 42.98 ## 3rd Qu.</description>
-    </item>
-    
-    <item>
-      <title>Hello Friend</title>
-      <link>/post/hello/</link>
-      <pubDate>Wed, 17 Sep 1986 00:00:00 +0000</pubDate>
-      
-      <guid>/post/hello/</guid>
-      <description> &amp;ldquo;Hello, friend?&amp;rdquo; That&amp;rsquo;s lame. Maybe I should give you a name&amp;hellip;
-But that&amp;rsquo;s a slippery slope.
-You&amp;rsquo;re only in my head.
-We have to remember that&amp;hellip;
-Shit.
-It&amp;rsquo;s actually happened.
-I&amp;rsquo;m talking to an imaginary person.
-— Mr. Robot S01E01
- </description>
-    </item>
-    
   </channel>
 </rss>
