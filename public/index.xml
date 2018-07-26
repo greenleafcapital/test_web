@@ -58,5 +58,14 @@ I&amp;rsquo;m talking to an imaginary person.
  </description>
     </item>
     
+    <item>
+      <title>Interest rates</title>
+      <link>/post/test2/</link>
+      <pubDate>Tue, 17 Sep 1985 00:00:00 +0000</pubDate>
+      
+      <guid>/post/test2/</guid>
+      <description>library(tidyquant)  </description>
+    </item>
+    
   </channel>
 </rss>

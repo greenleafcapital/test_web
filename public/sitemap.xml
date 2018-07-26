@@ -23,6 +23,11 @@
   </url>
   
   <url>
+    <loc>/post/test2/</loc>
+    <lastmod>1985-09-17T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>/categories/</loc>
     <priority>0</priority>
   </url>
