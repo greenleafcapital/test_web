@@ -26,7 +26,7 @@
 
 <meta name="twitter:card" content="summary" />
 <meta name="twitter:title" content="Interest rates :: Hello Friend — A simple theme for Hugo" />
-<meta name="twitter:description" content="library(tidyquant)  " />
+<meta name="twitter:description" content="library(tidyquant) library(ggthemes) library(timetk) library(dygraphs) library(tibbletime) int_rates &amp;lt;- tk_tbl(read.csv(&amp;quot;~/Documents/greenleaf_data/int_rates.csv&amp;quot;)) int_rates &amp;lt;- int_rates %&amp;gt;% mutate(date = as.Date(date))  int_rates %&amp;gt;% tbl_time(date) %&amp;gt;% filter(date &amp;gt;= &#39;1998-01-01&#39;) %&amp;gt;% filter(!symbol %in% c(&amp;quot;DGS3&amp;quot;, &amp;quot;DGS20&amp;quot;)) %&amp;gt;% ggplot(aes(x = date, y = price, color = symbol)) &#43; geom_line() &#43; scale_color_discrete(name = &amp;quot;Maturities&amp;quot;, breaks = c(&amp;quot;DGS2&amp;quot;, &amp;quot;DGS5&amp;quot;, &amp;quot;DGS10&amp;quot;, &amp;quot;DGS30&amp;quot;), labels = c(&amp;quot;2 Year&amp;quot;, &amp;quot;5 Year&amp;quot;, &amp;quot;10 Year&amp;quot;, &amp;quot;30 Year&amp;quot;)) &#43; labs(x = &amp;quot;Date&amp;quot;, y = &amp;quot;Interest Rates %&amp;quot;) &#43; theme_classic() &#43; annotate(&#39;rect&#39;, fill = &#39;grey&#39;, alpha = 0." />
 <meta name="twitter:site" content="" />
 <meta name="twitter:creator" content="" />
 <meta name="twitter:image" content="/img/default.jpg">
@@ -116,7 +116,100 @@
     
 
     <div class="post-content">
-      <pre><code class="language-r">library(tidyquant)
+      <pre><code class="language-r">
+library(tidyquant)
+library(ggthemes)
+library(timetk)
+library(dygraphs)
+library(tibbletime)
+
+int_rates &lt;- tk_tbl(read.csv(&quot;~/Documents/greenleaf_data/int_rates.csv&quot;))
+int_rates &lt;- int_rates %&gt;%
+  mutate(date = as.Date(date))
+
+</code></pre>
+
+<pre><code class="language-r">
+int_rates %&gt;% 
+  tbl_time(date) %&gt;%
+  filter(date &gt;= '1998-01-01') %&gt;%
+  filter(!symbol %in% c(&quot;DGS3&quot;, &quot;DGS20&quot;)) %&gt;%
+  ggplot(aes(x = date, y = price, color = symbol)) +
+  geom_line() +
+  scale_color_discrete(name = &quot;Maturities&quot;,
+                      breaks = c(&quot;DGS2&quot;, &quot;DGS5&quot;, &quot;DGS10&quot;, &quot;DGS30&quot;),
+                      labels = c(&quot;2 Year&quot;, &quot;5 Year&quot;, &quot;10 Year&quot;, &quot;30 Year&quot;)) +
+  labs(x = &quot;Date&quot;, y = &quot;Interest Rates %&quot;) +
+  theme_classic() +
+  annotate('rect', fill = 'grey', alpha = 0.5, xmin =  ymd('1998-11-01'), xmax = ymd('1999-12-31'),
+           ymin = -Inf, ymax = Inf) +
+  annotate('rect', fill = 'grey', alpha = 0.5, xmin =  ymd('2005-1-01'), xmax = ymd('2007-03-31'),
+           ymin = -Inf, ymax = Inf) +
+  annotate(&quot;text&quot;, x =  ymd('1999-11-01'), y = 3.5, label = 'Rising rates\ntight spreads', fontface = 1, size = 3.5) +
+  annotate(&quot;text&quot;, x =  ymd('2006-03-01'), y = 5.8, label = 'Rising rates\ntight spreads', fontface = 1, size = 3.5) +
+  ggtitle(&quot;Interest Rates for different Maturities, since 1998&quot;)
+  
+  # annotate('rect', fill = 'grey', alpha = 0.5, xmin =  ymd('2000-03-01'), xmax = ymd('2002-10-31'),
+  #          ymin = -Inf, ymax = Inf) +
+  # annotate('rect', fill = 'grey', alpha = 0.5, xmin =  ymd('2007-10-01'), xmax = ymd('2009-03-31'),
+  #          ymin = -Inf, ymax = Inf) +
+  # annotate(&quot;text&quot;, x =  ymd('2001-11-01'), y = 7, label = '2001 Dot Com Bust\nDown 49%', fontface = 1, size = 3.5) +
+  # annotate(&quot;text&quot;, x =  ymd('2008-11-01'), y = 6, label = '2007 Housing Bust\nDown 57%', fontface = 1, size = 3.5)
+
+</code></pre>
+
+<pre><code class="language-r">
+int_rates %&gt;% 
+  tbl_time(date) %&gt;%
+  filter(date &gt;= '1998-01-01') %&gt;%
+  filter(!symbol %in% c(&quot;DGS3&quot;, &quot;DGS20&quot;)) %&gt;%
+  ggplot(aes(x = date, y = price, color = symbol)) +
+  geom_line() +
+  theme_classic() +
+  scale_color_discrete(name = &quot;Maturities&quot;,
+                      breaks = c(&quot;DGS2&quot;, &quot;DGS5&quot;, &quot;DGS10&quot;, &quot;DGS30&quot;),
+                      labels = c(&quot;2 Year&quot;, &quot;5 Year&quot;, &quot;10 Year&quot;, &quot;30 Year&quot;)) +
+  labs(x = &quot;Date&quot;, y = &quot;Interest Rates %&quot;) +
+  annotate('rect', fill = 'grey', alpha = 0.5, xmin =  ymd('2000-03-01'), xmax = ymd('2002-10-31'),
+           ymin = -Inf, ymax = Inf) +
+  annotate('rect', fill = 'grey', alpha = 0.5, xmin =  ymd('2007-10-01'), xmax = ymd('2009-03-31'),
+           ymin = -Inf, ymax = Inf) +
+  annotate(&quot;text&quot;, x =  ymd('2001-11-01'), y = 7, label = '2001 Dot Com Bust\nDown 49%', fontface = 1, size = 3.5) +
+  annotate(&quot;text&quot;, x =  ymd('2008-11-01'), y = 6, label = '2007 Housing Bust\nDown 57%', fontface = 1, size = 3.5) +
+  ggtitle(&quot;Interest Rates for different Maturities, since 1998&quot;)
+
+</code></pre>
+
+<pre><code class="language-r">
+int_rates %&gt;% 
+  tbl_time(date) %&gt;%
+  filter(!symbol %in% c(&quot;DGS3&quot;, &quot;DGS20&quot;)) %&gt;%
+  ggplot(aes(x = date, y = price, color = symbol)) +
+  geom_line() +
+  theme_classic() +
+  scale_color_discrete(name = &quot;Maturities&quot;,
+                      breaks = c(&quot;DGS2&quot;, &quot;DGS5&quot;, &quot;DGS10&quot;, &quot;DGS30&quot;),
+                      labels = c(&quot;2 Year&quot;, &quot;5 Year&quot;, &quot;10 Year&quot;, &quot;30 Year&quot;)) +
+  scale_x_date(breaks = seq(ymd('1950-1-01'), ymd('2018-7-01'), by = '5 years')) +
+  annotate('rect', fill = 'grey', alpha = 0.5, xmin =  ymd('1968-11-01'), xmax = ymd('1970-05-31'),
+           ymin = -Inf, ymax = Inf) +
+  annotate('rect', fill = 'grey', alpha = 0.5, xmin =  ymd('1973-11-01'), xmax = ymd('1974-10-31'),
+           ymin = -Inf, ymax = Inf) +
+  annotate('rect', fill = 'grey', alpha = 0.3, xmin =  ymd('1980-11-01'), xmax = ymd('1982-08-31'),
+           ymin = -Inf, ymax = Inf) +
+  annotate('rect', fill = 'grey', alpha = 0.3, xmin =  ymd('2000-03-01'), xmax = ymd('2002-10-31'),
+           ymin = -Inf, ymax = Inf) +
+  annotate('rect', fill = 'grey', alpha = 0.3, xmin =  ymd('2007-10-01'), xmax = ymd('2009-03-31'),
+           ymin = -Inf, ymax = Inf) +
+  annotate(&quot;text&quot;, x =  ymd('1969-11-01'), y = 9.5, label = '1970 Bear Market\nDown 36%', fontface = 1, size = 3.5) +
+  annotate(&quot;text&quot;, x =  ymd('1974-01-01'), y = 4.5, label = '1974 Bear Market\nDown 48%', fontface = 1, size = 3.5) +
+  annotate(&quot;text&quot;, x =  ymd('1981-11-01'), y = 18, label = '1980 Bear Market\nDown 27%', fontface = 1, size = 3.5) +
+  annotate(&quot;text&quot;, x =  ymd('2001-11-01'), y = 8, label = '2001 Dot Com Bust\nDown 49%', fontface = 1, size = 3.5) +
+  annotate(&quot;text&quot;, x =  ymd('2008-11-01'), y = 6, label = '2007 Housing Bust\nDown 57%', fontface = 1, size = 3.5) +
+  ggtitle(&quot;Interest rates and Bear Markets, since 1950&quot;,
+          subtitle = &quot;I have ignored the other selloffs that occered in 1983, 1987, 1994\nas they did not turn into full bear markets&quot;) +
+  labs(x = 'Date', y = 'Interest Rates %') +
+  scale_y_continuous(breaks = seq(0,18,1.5)) 
 
 </code></pre>
 

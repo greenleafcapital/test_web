@@ -6,10 +6,20 @@
     <description>Recent content in Posts on Hello Friend</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Mon, 17 Sep 1990 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 25 Jul 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Interest Rates and Bear Markets</title>
+      <link>/post/int_rates/</link>
+      <pubDate>Wed, 25 Jul 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/int_rates/</guid>
+      <description>Photo by Joe Roberts
+ How do interest rates affect Market Valuations? It has been said many times that it is impossible to predict a bear market. Many on Wall Street spend enormous amount of time and money on this very activity. Although it may be difficult to predict the bear market one can evaluate the conditions that could lead to a bear market. What do I mean by that?</description>
+    </item>
     
     <item>
       <title>Hello World</title>
@@ -43,7 +53,7 @@ I&amp;rsquo;m talking to an imaginary person.
       <pubDate>Tue, 17 Sep 1985 00:00:00 +0000</pubDate>
       
       <guid>/post/test2/</guid>
-      <description>library(tidyquant)  </description>
+      <description>library(tidyquant) library(ggthemes) library(timetk) library(dygraphs) library(tibbletime) int_rates &amp;lt;- tk_tbl(read.csv(&amp;quot;~/Documents/greenleaf_data/int_rates.csv&amp;quot;)) int_rates &amp;lt;- int_rates %&amp;gt;% mutate(date = as.Date(date))  int_rates %&amp;gt;% tbl_time(date) %&amp;gt;% filter(date &amp;gt;= &#39;1998-01-01&#39;) %&amp;gt;% filter(!symbol %in% c(&amp;quot;DGS3&amp;quot;, &amp;quot;DGS20&amp;quot;)) %&amp;gt;% ggplot(aes(x = date, y = price, color = symbol)) + geom_line() + scale_color_discrete(name = &amp;quot;Maturities&amp;quot;, breaks = c(&amp;quot;DGS2&amp;quot;, &amp;quot;DGS5&amp;quot;, &amp;quot;DGS10&amp;quot;, &amp;quot;DGS30&amp;quot;), labels = c(&amp;quot;2 Year&amp;quot;, &amp;quot;5 Year&amp;quot;, &amp;quot;10 Year&amp;quot;, &amp;quot;30 Year&amp;quot;)) + labs(x = &amp;quot;Date&amp;quot;, y = &amp;quot;Interest Rates %&amp;quot;) + theme_classic() + annotate(&#39;rect&#39;, fill = &#39;grey&#39;, alpha = 0.</description>
     </item>
     
   </channel>
