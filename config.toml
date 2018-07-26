@@ -1,12 +1,12 @@
-baseurl = "https://example.org/"
+baseurl = "/"
 languageCode = "en-us"
-title = "Hello Friend"
+title = "Green Leaf Capital"
 theme = "hugo-theme-hello-friend"
 copyright = ""
 paginate = 5
 
 [params]
-  subtitle = "A simple theme for Hugo"
+  subtitle = ""
 
 ignoreFiles = ["\\.Rmd$", "\\.Rmarkdown$", "_files$", "_cache$"]
 
