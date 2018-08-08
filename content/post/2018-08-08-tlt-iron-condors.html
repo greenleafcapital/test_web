@@ -1,0 +1,142 @@
+---
+title: "TLT trade - Iron Condor"
+author: "Team Green"
+date: "2018-08-08"
+categories:
+  - Market
+  - bonds
+tags:
+  - market
+  - rates
+  - bonds
+output:
+  pdf_document: default
+  html_document: default
+description: "Can interest rates stay range bound for the rest of the year?"
+cover: "tlt-2017.png"
+    
+---
+
+<script src="/rmarkdown-libs/kePrint/kePrint.js"></script>
+
+
+<p>Today we executed a trade to sell both call and put verticals on the underlying TLT etf (Long US government bonds etf). For the trade to make money, both legs of the trade need to expire worthless. First lets start by looking at the historical returns and volatility of Long Bonds since summer of 2016.</p>
+<p><img src="/post/2018-08-08-tlt-iron-condors_files/figure-html/tlt%20hist%202017-1.png" width="672" /></p>
+<p>Interest rates made their lows in the summer of 2016 and since then rates have been moving higher. We saw a big spike up in interest rates after the presidential election as POTUS DJT was considered to be more of a debt guy. During the campaign he had promised to run US like a business, and in the past he was comfortable taking on higher levels of debts when he ran his own businesses.</p>
+<p>But since the winter of 2016, monthly returns for long bonds have been steady between the +/- 2% range.</p>
+<p>Our trade is based on the idea that this could continue in the future and we could see resonable moves in the rates market. Below you can see the options that we selected for our trade.</p>
+<table class="table table-hover" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:optionsdata">Table 1: </span>TLT Dec 2018 Calls
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Name
+</th>
+<th style="text-align:right;">
+Strike
+</th>
+<th style="text-align:right;">
+Last
+</th>
+<th style="text-align:left;">
+Type
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+TLT
+</td>
+<td style="text-align:right;">
+123
+</td>
+<td style="text-align:right;">
+1.07
+</td>
+<td style="text-align:left;">
+Call
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+TLT
+</td>
+<td style="text-align:right;">
+124
+</td>
+<td style="text-align:right;">
+0.86
+</td>
+<td style="text-align:left;">
+Call
+</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table class="table table-hover" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:options-put-data">Table 2: </span>TLT Dec 2018 Puts
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Name
+</th>
+<th style="text-align:right;">
+Strike
+</th>
+<th style="text-align:right;">
+Last
+</th>
+<th style="text-align:left;">
+Type
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+TLT
+</td>
+<td style="text-align:right;">
+113
+</td>
+<td style="text-align:right;">
+0.98
+</td>
+<td style="text-align:left;">
+Put
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+TLT
+</td>
+<td style="text-align:right;">
+114
+</td>
+<td style="text-align:right;">
+1.21
+</td>
+<td style="text-align:left;">
+Put
+</td>
+</tr>
+</tbody>
+</table>
+<p>The trade is as follows :</p>
+<ul>
+<li>Short 123 Call Dec 21 at $1.07</li>
+<li>Long 124 Call Dec 21 at $0.86</li>
+<li>Short 114 Put Dec 21 at $1.21</li>
+<li>Long 113 Put Dec 21 at $0.98</li>
+</ul>
+<p>Our total credit on the trade is $0.44 which is also the maximum profit. Our maximum loss on the trade is $0.56.</p>
+<p>We will want the price of TLT to stay range bound for the next 135 days to make our maximum profit.</p>
+<p>But this trade has a risk of recency bias. Just because there is lack of volatility does not mean that it will continue to be the same. In the past TLT has moved vigorously. Lets look at the move since 2013 in TLT returns.</p>
+<p><img src="/post/2018-08-08-tlt-iron-condors_files/figure-html/returns%20tlt-1.png" width="672" /></p>
+<p>We have seen many spikes in the returns and the range of returns is wider than what we would like to see. But this trade does offer a compelling return, if things remain the same. We will continue to monitor it and may close the trade before expriy, if an when things change.</p>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Trade on Long Short</title>
+    <link>/tags/trade/</link>
+    <description>Recent content in Trade on Long Short</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 06 Aug 2018 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/trade/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Gold Trade Idea</title>
+      <link>/post/gld/</link>
+      <pubDate>Mon, 06 Aug 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/gld/</guid>
+      <description>A potential trade idea that we executed today was being long Gold. First lets see how the shiny object has performed since 2010 versus the dollar.
+Its clear from the chart that both assets move in opposite directions (most of the time). After the huge run in price in Gold from 2009 t0 2013, it saw a crash in 2014. Since then its been sideways and range bound trading between $1300 to $1200.</description>
+    </item>
+    
+    <item>
+      <title>Facebook disappoints! Stock down 20%</title>
+      <link>/post/facebook-idea/</link>
+      <pubDate>Thu, 26 Jul 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/facebook-idea/</guid>
+      <description>Yesterday Facebook reported their earnings after market hours and investors were not pleased. They sent the stock down almost 25% at one point. Right now the stock is down about 20%. We wanted to check if this was the worst performance for Facebook stock since the IPO
+This is the worst one day performance for Facebook since its IPO. After its IPO Facebook stock was under heavy pressure and it continued to slide down for several days.</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,455 @@
+<!DOCTYPE HTML>
+
+<html lang='en'>
+	<head>
+		<title>Chapter 5 &middot; TWIST</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href='/assets/css/main.css' />
+		
+		<noscript><link rel="stylesheet" href='/assets/css/noscript.css' /></noscript>
+	</head>
+
+	<body lang='en' class="is-loading">
+
+		
+			<div id="wrapper">
+
+                
+<header id="header">
+    <a href='/' class="logo">TWIST</a>
+</header>
+
+                
+
+<nav id="nav">
+    <ul class="links">
+        
+	    
+		
+		
+		
+		
+		
+    
+    
+    <li class=""> <a href="/">Home</a></li>
+	
+                
+            
+            
+	
+	
+	
+    
+    <li class=""> <a href="/about/">About</a></li>
+	
+                
+            
+            
+	
+	
+	
+    
+    <li class=""> <a href="/news/">News</a></li>
+	
+                
+            
+            
+	
+	
+	
+    
+    <li class=""> <a href="/ideas/">Ideas &amp; Resources</a></li>
+	
+                
+            
+            
+	
+	
+	
+    
+
+        
+    </ul>
+    
+</nav>
+
+
+
+				
+					<div id="main">
+
+						
+                        <section class="post">
+                            <header class="major">
+                                
+                                <span class="date">January 1, 2018</span>
+                                
+                                <h1>Chapter 5</h1>
+                                <p>Financial Modeling - Chapter 5</p>
+                            </header>
+                            
+                            <p>In this chapter we will discover ways to download economic data directly from FRED (Federal Reserve Economic data) into R.</p>
+<p>We will download :</p>
+<ul>
+<li>Federal Funds Rate</li>
+<li>10 Year Treasury yield</li>
+<li>30 year fixed average mortgage rate for US</li>
+<li>Civilian Unemployment rate</li>
+<li>Housing Price Index</li>
+<li>Real Estate Investment Trust Index (REIT)</li>
+</ul>
+<p>After that we will download and plot the interest rates for different maturities. We will visualize the shape of the yield curve and credit spread.</p>
+<pre class="r"><code>#loading libraries
+
+library(tidyquant)
+library(ggthemes)
+library(timetk)
+library(tibbletime)
+library(rvest)
+library(knitr)
+library(kableExtra)
+library(magick)</code></pre>
+<p>Downloading Fed Funds rate</p>
+<pre class="r"><code># Downloading federal funds rate
+
+fed_funds &lt;- tq_get(&quot;FEDFUNDS&quot;,
+                    from = &quot;1950-01-01&quot;,
+                    get = &quot;economic.data&quot;)
+
+fed_funds %&gt;%
+  mutate(price = price/100) %&gt;%
+  ggplot(aes(x = date, y = price)) +
+  geom_line() +
+  ggtitle(&quot;Federal Funds Rate from 1955 to 2018&quot;) +
+  labs(x = &quot;Date&quot;, y = &quot;Rate&quot;) +
+  scale_y_continuous(labels = scales::percent,
+                     breaks = seq(0,0.2,0.02)) +
+  scale_x_date(date_breaks = &quot;4 years&quot;, date_labels = &quot;%Y&quot;) +
+  theme_bw()</code></pre>
+<p><img src="/post/ch5_files/figure-html/FRED%20funds%20rate-1.png" width="672" /></p>
+<p>Downloading ten year Treasury yield</p>
+<pre class="r"><code># Downloading federal funds rate
+
+ten &lt;- tq_get(&quot;DGS10&quot;,
+                    from = &quot;1950-01-01&quot;,
+                    get = &quot;economic.data&quot;)
+
+ten %&gt;%
+  mutate(price = price/100) %&gt;%
+  ggplot(aes(x = date, y = price)) +
+  geom_line() +
+  ggtitle(&quot;10 Year Treasury Bonds Rate from 1960 to 2018&quot;) +
+  labs(x = &quot;Date&quot;, y = &quot;Rate&quot;) +
+  scale_y_continuous(labels = scales::percent,
+                     breaks = seq(0,0.2,0.02)) +
+  scale_x_date(date_breaks = &quot;4 years&quot;, date_labels = &quot;%Y&quot;) +
+  theme_bw()</code></pre>
+<p><img src="/post/ch5_files/figure-html/ten%20yr%20rate-1.png" width="672" /></p>
+<pre class="r"><code>ten %&gt;%
+  mutate(price = price/100) %&gt;%
+  filter(date &gt;= &quot;2007-01-01&quot;) %&gt;%
+  ggplot(aes(x = date, y = price)) +
+  geom_line() +
+  ggtitle(&quot;10 Year Treasury Bonds Rate from 2007 to 2018&quot;) +
+  labs(x = &quot;Date&quot;, y = &quot;Rate&quot;) +
+  scale_y_continuous(labels = scales::percent,
+                     breaks = seq(0,0.2,0.005)) +
+  scale_x_date(date_breaks = &quot;1 years&quot;, date_labels = &quot;%Y&quot;) +
+  theme_bw()</code></pre>
+<p><img src="/post/ch5_files/figure-html/ten%20yr%20rate-2.png" width="672" /></p>
+<p>Downloading and plotting Average 30 Year Fixed Mortgage rate for USA</p>
+<pre class="r"><code>mort_30y &lt;- tq_get(&quot;MORTGAGE30US&quot;,
+                    from = &quot;1950-01-01&quot;,
+                    get = &quot;economic.data&quot;)
+
+mort_30y %&gt;%
+  mutate(price = price/100) %&gt;%
+  ggplot(aes(x = date, y = price)) +
+  geom_line() +
+  ggtitle(&quot;30 Year Fixed Mortgage Rate from 1971 to 2018&quot;) +
+  labs(x = &quot;Date&quot;, y = &quot;Rate&quot;) +
+  scale_y_continuous(labels = scales::percent,
+                     breaks = seq(0,0.2,0.01)) +
+  scale_x_date(date_breaks = &quot;5 years&quot;, date_labels = &quot;%Y&quot;) +
+  theme_bw()</code></pre>
+<p><img src="/post/ch5_files/figure-html/CPI-1.png" width="672" /></p>
+<pre class="r"><code>mort_30y %&gt;%
+  mutate(price = price/100) %&gt;%
+  filter(date &gt;= &quot;2007-01-01&quot;) %&gt;%
+  ggplot(aes(x = date, y = price)) +
+  geom_line() +
+  ggtitle(&quot;30 Year Fixed Mortgage Rate from 2007 to 2018&quot;,
+          subtitle = &quot;The down trend has stopped and we may be ready to change course&quot;) +
+  labs(x = &quot;Date&quot;, y = &quot;Rate&quot;) +
+  scale_y_continuous(labels = scales::percent,
+                     breaks = seq(0,0.2,0.005)) +
+  scale_x_date(date_breaks = &quot;1 years&quot;, date_labels = &quot;%Y&quot;) +
+  theme_bw()</code></pre>
+<p><img src="/post/ch5_files/figure-html/CPI-2.png" width="672" /></p>
+<p>Downloading and plotting Civilian unemployment rate</p>
+<pre class="r"><code>unrate&lt;- tq_get(&quot;UNRATE&quot;,
+                    from = &quot;1950-01-01&quot;,
+                    get = &quot;economic.data&quot;)
+
+unrate %&gt;%
+  mutate(price = price/100) %&gt;%
+  ggplot(aes(x = date, y = price)) +
+  geom_line() +
+  ggtitle(&quot;Unemployment Rate from 1950 to 2018&quot;) +
+  labs(x = &quot;Date&quot;, y = &quot;Unemployment Rate&quot;) +
+  scale_y_continuous(labels = scales::percent,
+                     breaks = seq(0,0.2,0.01)) +
+  scale_x_date(date_breaks = &quot;5 years&quot;, date_labels = &quot;%Y&quot;) +
+  theme_bw()</code></pre>
+<p><img src="/post/ch5_files/figure-html/unrate-1.png" width="672" /></p>
+<pre class="r"><code>unrate %&gt;%
+  filter(date &gt;= &quot;1999-01-01&quot;) %&gt;%
+  mutate(price = price/100) %&gt;%
+  ggplot(aes(x = date, y = price)) +
+  geom_line() +
+  ggtitle(&quot;Unemployment Rate from 1999 to 2018&quot;) +
+  labs(x = &quot;Date&quot;, y = &quot;Unemployment Rate&quot;) +
+  scale_y_continuous(labels = scales::percent,
+                     breaks = seq(0,0.2,0.01)) +
+  scale_x_date(date_breaks = &quot;2 years&quot;, date_labels = &quot;%Y&quot;) +
+  theme_bw()</code></pre>
+<p><img src="/post/ch5_files/figure-html/unrate-2.png" width="672" /></p>
+<p>Downloading and plotting Housing Price Index</p>
+<pre class="r"><code>#Downloading Case &amp; Shiller 20 City Home Price Index
+
+housing &lt;- tq_get(&quot;CSUSHPINSA&quot;,
+                  from = &quot;1970-01-01&quot;,
+                  get = &quot;economic.data&quot;)
+
+housing %&gt;%
+  ggplot(aes(x = date, y = price)) +
+  geom_line() +
+  ggtitle(&quot;Case Shiller Housing Price Index from 1988 to 2018&quot;) +
+  labs(x = &quot;Date&quot;, y = &quot;Housing Price Index&quot;) +
+  scale_y_continuous(breaks = seq(50,220,10)) +
+  scale_x_date(date_breaks = &quot;3 years&quot;, date_labels = &quot;%Y&quot;) +
+  theme_bw()</code></pre>
+<p><img src="/post/ch5_files/figure-html/house-1.png" width="672" /></p>
+<pre class="r"><code>housing %&gt;%
+  tq_transmute(select = price,
+               mutate_fun = periodReturn,
+               period = &quot;monthly&quot;,
+               col_rename = &quot;returns&quot;) %&gt;%
+  mutate(cr = cumprod(1 + returns)) %&gt;%
+  ggplot(aes(x = date, y = cr)) +
+  geom_line() +
+  ggtitle(&quot;Growth of $1 invested in US housing from 1988 to 2018&quot;) +
+  labs(x = &quot;Date&quot;, y = &quot;Growth $&quot;) +
+  scale_y_continuous(breaks = seq(0,3,0.5)) +
+  scale_x_date(date_breaks = &quot;3 years&quot;, date_labels = &quot;%Y&quot;) +
+  theme_bw()</code></pre>
+<p><img src="/post/ch5_files/figure-html/house-2.png" width="672" /></p>
+<p>Downloading and plotting US Real Estate Investment Trust (REITs)</p>
+<pre class="r"><code>reit &lt;- tq_get(&quot;WILLREITIND&quot;,
+                  from = &quot;1970-01-01&quot;,
+                  get = &quot;economic.data&quot;)
+
+reit %&gt;%
+  na.omit() %&gt;%
+  ggplot(aes(x = date, y = price)) +
+  geom_line() +
+  ggtitle(&quot;Willshire REIT Index from 1978 to 2018&quot;) +
+  labs(x = &quot;Date&quot;, y = &quot;REIT Index&quot;) +
+  #scale_y_continuous(breaks = seq(50,220,10)) +
+  scale_x_date(date_breaks = &quot;3 years&quot;, date_labels = &quot;%Y&quot;) +
+  theme_bw()</code></pre>
+<p><img src="/post/ch5_files/figure-html/Reit%20index-1.png" width="672" /></p>
+<pre class="r"><code>reit %&gt;%
+  na.omit() %&gt;%
+  tq_transmute(select = price,
+               mutate_fun = periodReturn,
+               period = &quot;monthly&quot;,
+               col_rename = &quot;returns&quot;) %&gt;%
+  mutate(cr = cumprod(1 + returns)) %&gt;%
+  ggplot(aes(x = date, y = cr)) +
+  geom_line() +
+  ggtitle(&quot;Growth of $1 in Willshire REIT Index \nfrom 1978 to 2018&quot;) +
+  labs(x = &quot;Date&quot;, y = &quot;Growth of $1&quot;) +
+  scale_y_continuous(breaks = seq(0,220,10)) +
+  scale_x_date(date_breaks = &quot;3 years&quot;, date_labels = &quot;%Y&quot;) +
+  theme_bw()</code></pre>
+<p><img src="/post/ch5_files/figure-html/Reit%20index-2.png" width="672" /></p>
+<p>Next we will download the following yields for the following maturities</p>
+<ul>
+<li>3 months</li>
+<li>1 Year</li>
+<li>2 Year</li>
+<li>5 Year</li>
+<li>10 Year</li>
+<li>20 Year</li>
+<li>30 Year</li>
+</ul>
+<pre class="r"><code>bonds_yield_tickers &lt;- tibble(symbol = c(&quot;DTB3&quot;, &quot;DGS1&quot;, &quot;DGS2&quot;, &quot;DGS5&quot;, &quot;DGS10&quot;, &quot;DGS20&quot;, &quot;DGS30&quot;),
+                              Bonds = c(&quot;3 Month \nT-Bills&quot;, &quot;1 Year \nNotes&quot;, &quot;2 Year \nNotes&quot;,
+                                       &quot;5 Year \nNotes&quot;, &quot;10 Year \nBonds&quot;, &quot;20 Year \nBonds&quot;,
+                                       &quot;30 Year \nBonds&quot;))
+
+bond_yields &lt;- tq_get(bonds_yield_tickers,
+                      from = &quot;1950-01-01&quot;,
+                      get = &quot;economic.data&quot;)
+
+bond_yields &lt;- bond_yields %&gt;%
+  mutate(symbol = as_factor(symbol)) %&gt;%
+  mutate(Bonds = as_factor(Bonds)) %&gt;%
+   mutate(year = year(date))
+
+
+
+bond_yields %&gt;%
+  mutate(symbol = as_factor(symbol)) %&gt;%
+  filter(date &gt;= Sys.Date() - 4) %&gt;%
+  mutate(year = year(date)) %&gt;%
+  ggplot(aes(x = Bonds, y = price,group = year)) +
+  geom_line() +
+  geom_point(size = 3) +
+  ggtitle(&quot;Treasury Yield Curve as of August 3, 2018&quot;) +
+  labs(x = &quot;Bonds&quot;, y = &quot;Interest Rates&quot;) +
+  scale_y_continuous(breaks = seq(0,3.5, 0.25))</code></pre>
+<p><img src="/post/ch5_files/figure-html/treasury%20yield%20curve-1.png" width="672" /></p>
+<p>But this is just a static yield curve and we may want to compare how the yield curve has changed throughout its history. Below we have put together an animated history of the yield curve since 1993. This is the yield curve for end of each year since 1993.</p>
+<pre class="r"><code>yc_animation &lt;- image_read(path = &quot;~/Documents/greenleaf_data/treasury_yield1.gif&quot;)
+yc_animation</code></pre>
+<p><img src="/post/ch5_files/figure-html/yield%20animation-1.gif" /><!-- --></p>
+<p>Next we will download and plot the bond yield for the Moody’s Aaa and Baa bonds from FRED.</p>
+<pre class="r"><code>cred_bonds &lt;- tibble(symbol = c(&quot;DAAA&quot;, &quot;DBAA&quot;),
+                     Bonds = c(&quot;AAA Bonds&quot;, &quot;BAA Bonds&quot;))
+
+cred_yield &lt;- tq_get(cred_bonds,
+                     from = &quot;1950-01-01&quot;,
+                     get = &quot;economic.data&quot;)
+
+cred_yield %&gt;%
+  group_by(Bonds) %&gt;%
+  filter(date &gt;= &quot;1988-01-01&quot;) %&gt;%
+  tq_transmute(mutate_fun = to.period,
+               period = &quot;months&quot;) %&gt;%
+  ggplot(aes(x = date, y = price, color = Bonds)) +
+  geom_line() +
+  ggtitle(&quot;Moody&#39;s Investment Grade Corporate Bond Yields from 1990 to 2018&quot;) +
+  scale_y_continuous(breaks = seq(0,12,1)) +
+  labs(x = &quot;Date&quot;, y = &quot;Interest Rates&quot;) +
+  theme_bw()</code></pre>
+<p><img src="/post/ch5_files/figure-html/AAA%20&%20BBB%20bonds-1.png" width="672" /></p>
+<p>Next we will plot the spread between the Aaa rated bonds and the Baa bonds.</p>
+<pre class="r"><code>cred_yield %&gt;%
+  group_by(Bonds) %&gt;%
+  select(-symbol) %&gt;%
+  filter(date &gt;= &quot;1988-01-01&quot;) %&gt;%
+  tq_transmute(mutate_fun = to.period,
+               period = &quot;months&quot;) %&gt;%
+  spread(Bonds, value = price) %&gt;%
+  mutate(spread =`BAA Bonds` - `AAA Bonds`) %&gt;%
+  ggplot(aes(x = date, y = spread)) +
+  geom_line() +
+  ggtitle(&quot;Moody&#39;s Investment Grade Corporate bonds (Baa vs Aaa) \n spread from 1990 to 2018&quot;,
+          subtitle = &quot;Higher the spread, higher compensation for taking the risk&quot;) +
+  scale_y_continuous(breaks = seq(0,12,0.5)) +
+  scale_x_date(date_breaks = &quot;2 years&quot;, date_labels = &quot;%Y&quot;) +
+  labs(x = &quot;Date&quot;, y = &quot;Interest Rates Spread&quot;) +
+  theme_bw()</code></pre>
+<p><img src="/post/ch5_files/figure-html/spread%20plot-1.png" width="672" /></p>
+
+
+                            
+                            
+                            
+                            
+                            
+                        </section>
+
+					</div>
+
+                    
+
+<footer id="footer">
+    
+    <section>
+        <form method="post" action="post-action">
+            <div class="field">
+                <label for="name">Name</label>
+                <input type="text" name="name" id="name" />
+            </div>
+            <div class="field">
+                <label for="email">Email</label>
+                <input type="text" name="email" id="email" />
+            </div>
+            <div class="field">
+                <label for="message">Message</label>
+                <textarea name="message" id="message" rows="3"></textarea>
+            </div>
+            <ul class="actions">
+                <li><input type="submit" value='Send A Message' /></li>
+            </ul>
+        </form>
+    </section>
+    
+    <section class="split contact">
+        
+        <section class="alt">
+            <h3>Address</h3>
+            <p>
+                
+                     1234 Somewhere Road #87257
+                
+                     <br/>  Nashville, TN 00000-0000
+                
+            </p>
+        </section>
+        
+        
+        <section>
+            <h3>Phone</h3>
+            <p><a href="tel:%28800%29%20000-0000">(800) 000-0000</a></p>
+        </section>
+        
+        
+        <section>
+            <h3>Email</h3>
+            <p><a href="mailto:someone@untitled.tld">someone@untitled.tld</a></p>
+        </section>
+        
+        
+        <section>
+            <h3>Social</h3>
+            <ul class="icons alt">
+                
+                
+                
+                
+                
+                <li><a href="https://github.com/" class="icon alt fa-github"><span class="label">GitHub</span></a></li>
+                
+                
+                
+                
+                
+            </ul>
+        </section>
+        
+    </section>
+</footer>
+
+                    
+>
+
+
+            </div>
+            
+            
+<script src='/assets/js/jquery.min.js'></script>
+<script src='/assets/js/jquery.scrollex.min.js'></script>
+<script src='/assets/js/jquery.scrolly.min.js'></script>
+<script src='/assets/js/skel.min.js'></script>
+<script src='/assets/js/util.js'></script>
+<script src='/assets/js/main.js'></script>
+
+
+	</body>
+</html>

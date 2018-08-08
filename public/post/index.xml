@@ -1,24 +1,76 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Posts on Green Leaf Capital</title>
+    <title>Posts on Long Short</title>
     <link>/post/</link>
-    <description>Recent content in Posts on Green Leaf Capital</description>
+    <description>Recent content in Posts on Long Short</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 25 Jul 2018 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 08 Aug 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
+      <title>TLT trade - Iron Condor</title>
+      <link>/post/2018-08-08-tlt-iron-condors/</link>
+      <pubDate>Wed, 08 Aug 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2018-08-08-tlt-iron-condors/</guid>
+      <description>Today we executed a trade to sell both call and put verticals on the underlying TLT etf (Long US government bonds etf). For the trade to make money, both legs of the trade need to expire worthless. First lets start by looking at the historical returns and volatility of Long Bonds since summer of 2016.
+Interest rates made their lows in the summer of 2016 and since then rates have been moving higher.</description>
+    </item>
+    
+    <item>
+      <title>Gold Trade Idea</title>
+      <link>/post/gld/</link>
+      <pubDate>Mon, 06 Aug 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/gld/</guid>
+      <description>A potential trade idea that we executed today was being long Gold. First lets see how the shiny object has performed since 2010 versus the dollar.
+Its clear from the chart that both assets move in opposite directions (most of the time). After the huge run in price in Gold from 2009 t0 2013, it saw a crash in 2014. Since then its been sideways and range bound trading between $1300 to $1200.</description>
+    </item>
+    
+    <item>
+      <title>FANG Stocks</title>
+      <link>/post/fang/</link>
+      <pubDate>Fri, 27 Jul 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/fang/</guid>
+      <description>FAANG stock performance since July 1, 2018
+With Netflix and Facebook both suffering major losses, all eyes will be on Apple as it races to be the first company with a $1 Trillion valuation.
+How have the FAANG stocks performed YTD
+Netflix and Amazon have clearly dominated the large cap stocks. This has been a terrible year of performance for managers who make a living by shorting “bubble basket stocks”.</description>
+    </item>
+    
+    <item>
+      <title>Bond Market</title>
+      <link>/post/bond/</link>
+      <pubDate>Thu, 26 Jul 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/bond/</guid>
+      <description>Year 2018 has not been a good one for the bond investors. Since the summer of 2017, interest rates have been rising.
+The long term interest rates had been trending lower since 1980s. In the chart above rates reached a high of 8% and since then they kept making lower lows. Currently the ten year rates are near the an important key level at 3%. From here the future path interest will decide which way the trend moves.</description>
+    </item>
+    
+    <item>
+      <title>Facebook disappoints! Stock down 20%</title>
+      <link>/post/facebook-idea/</link>
+      <pubDate>Thu, 26 Jul 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/facebook-idea/</guid>
+      <description>Yesterday Facebook reported their earnings after market hours and investors were not pleased. They sent the stock down almost 25% at one point. Right now the stock is down about 20%. We wanted to check if this was the worst performance for Facebook stock since the IPO
+This is the worst one day performance for Facebook since its IPO. After its IPO Facebook stock was under heavy pressure and it continued to slide down for several days.</description>
+    </item>
+    
+    <item>
       <title>Interest Rates and Bear Markets</title>
       <link>/post/int_rates/</link>
-      <pubDate>Wed, 25 Jul 2018 00:00:00 +0000</pubDate>
+      <pubDate>Thu, 26 Jul 2018 00:00:00 +0000</pubDate>
       
       <guid>/post/int_rates/</guid>
-      <description>Photo by Joe Roberts
- How do interest rates affect Market Valuations? It has been said many times that it is impossible to predict a bear market. Many on Wall Street spend enormous amount of time and money on this very activity. Although it may be difficult to predict the bear market one can evaluate the conditions that could lead to a bear market. What do I mean by that?</description>
+      <description>How do interest rates affect Market Valuations? It has been said many times that it is impossible to predict a bear market. Many on Wall Street spend enormous amount of time and money on this very activity. Although it may be difficult to predict the bear market one can evaluate the conditions that could lead to a bear market. What do I mean by that?
+Lets imagine a bridge that carries thousands of vehicles across from one end to another.</description>
     </item>
     
   </channel>

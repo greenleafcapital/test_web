@@ -1,7 +1,14 @@
 ---
 title: "Interest Rates and Bear Markets"
 author: "Team Green"
-date: "2018-07-25"
+date: "2018-07-26"
+categories:
+  - Market
+  - bonds
+tags:
+  - market
+  - rates
+  - bonds
 output:
   pdf_document: default
   html_document: default
@@ -22,7 +29,7 @@ int_rates <- int_rates %>%
   mutate(date = as.Date(date))
 
 ```
-###########*Photo by Joe Roberts*
+
 
 
 
@@ -145,9 +152,6 @@ int_rates %>%
 We agree that conditions are getting tight, valuations are high and this bull market is mature and may be on its last phase. The biggest hurdle is predicting when the bear market will start. This is why we employ our Model to guide us. We will stay 100% in equities, until the model tell us to get out. As of last month the model overwhelmingly preferred investing in US stocks versus bonds or international stocks. Accordingly, we have directed our capital in the US markets. 
 <br />
 It is possible that tomorrow there could be some event such as a trade war, or an actual war that could signal an end to this long bull market. At that time, when the model indicates that conditions are getting riskier, we will switch to the safety of bonds. In the mean time we will continue our current strategy.
-<br/>
-<br/>
-<br/>
 <br/>
 <br/>
 <br/>

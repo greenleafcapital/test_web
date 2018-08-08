@@ -1,0 +1,257 @@
+---
+title: "Chapter 7"
+output: html_document
+date: "2018-01-01"
+description: "Financial Modeling - Chapter 7"
+author: "Team Green"
+tag: ["Financial Modeling"]
+categories:
+  - Financial Modeling
+  - Tutorial
+tags:
+  - Financial Modeling
+cover: seven.jpg  
+
+---
+
+#### Mean Variance Optimization
+
+In this chapter we will use mean and variance of different portfolio to choose the portfolios that offer that offer the highest returns for a given level of risk.
+
+We will construct a diversified portfolio of different assets such as bonds, stocks commodities etc.
+
+```{r lib, warning=FALSE, message=FALSE}
+
+library(PortfolioAnalytics)
+library(tidyquant)
+library(ggthemes)
+library(tseries)
+library(timetk)
+
+```
+
+We will choose the following assets for building our portfolio.
+
+- SPY for S&P 500 Index
+- VEU for International equities
+- IJS for small cap stocks
+- EEM for emerging market stocks
+- AGG for aggregate bonds
+- GLD for Gold
+- TLT for long government bonds
+
+
+```{r price data, warning=FALSE, message=FALSE}
+
+tickers <- c("SPY", "VEU", "IJS", "EEM", "AGG", "GLD", "TLT")
+
+#Download price data
+price_data <- tq_get(tickers,
+                     from = "2011-01-01")
+#Calculate returns and spread into an xts object
+
+returns <- price_data %>%
+  group_by(symbol) %>%
+  tq_transmute(select = adjusted,
+               mutate_fun = periodReturn,
+               period = "monthly",
+               col_rename = "returns") %>%
+  spread(symbol, value = returns) %>%
+  tk_xts()
+
+```
+
+After calculating the monthly returns we will use the tseries package to calculate the optimal portfolio weights for our objectives and constraints.
+
+First we will generate 5000 random portfolio with random weights assigned to the assets described above. Then we will calculate the mean and standard deviation for each portfolio and plot the result.
+
+
+```{r warning=FALSE, message=FALSE}
+
+# First we will create two empty vectors to store our mean and standard deviation
+
+port_sd <- port_mean <- rep(NA,5000) 
+
+# Next we will create an empty table to store the combined mean and standard deviation data
+
+port_tbl <- tibble(m = logical(),
+                   s = logical())
+
+# Running the simulation by using the for loop to generate mean and standard deviations
+# for 5000 portfolios
+
+for (i in seq_along(port_sd)) {
+  
+  weight <- diff(c(0,sort(runif(6)),1))
+  ret <- colMeans(returns)
+  cov_mat <- cov(returns)
+  port_ret <- sum(weight * ret)
+  sd <- sqrt(t(weight) %*% cov_mat %*% weight)
+  port_tbl[i,] <- c(port_ret, sd)
+  
+  
+}
+
+
+# Plotting the result below
+
+port_tbl %>%
+  ggplot(aes(x = s, y = m)) +
+  geom_point() +
+  ggtitle("Mean and Standard Deviation for 5000 portfolios") +
+  labs(x = "Standard Deviation", y = "Mean") +
+  scale_y_continuous(labels = scales::percent) +
+  scale_x_continuous(labels = scales::percent) +
+  theme_bw()
+  
+
+
+```
+
+
+From the above chart we can visualize the mean and standard deviation for the 5000 portfolios. Some portfolios are clearly more efficient than others. For example the portfolios on the bottom right have standard deviation of about 0.04 and minimal returns. We can achieve much better results for much lower volatility.
+
+First we will calculate the weights for the minimum variance portfolios. The we will see returns for this portfolio since 2011. After that we will calculate the weights of the tangency portfolio (portfolio which has the highest Sharpe ratio) and plot our results.
+
+```{r port opt,  warning=FALSE, message=FALSE}
+# Calculating the minimum variance portfolio
+opt_port <- portfolio.optim(returns)
+
+
+port_weights <- opt_port$pw
+names(port_weights) <- colnames(returns)
+
+port_wt_tbl <- tibble(Asset = names(port_weights),
+       Weight = port_weights)
+
+port_wt_tbl %>%
+  ggplot(aes(x = Asset, y = Weight)) +
+  geom_bar(stat = "identity") +
+  scale_y_continuous(labels = scales::percent) +
+  ggtitle("Minimum variance portfolio weights") +
+  theme_bw()  
+
+port_ret_tbl <- tibble(date = 1:92,
+       port_ret=opt_port$px) %>%
+  mutate(date = seq(ymd("2011-01-01"), ymd("2018-08-03"), by = "months"))
+
+port_ret_tbl %>%
+  ggplot(aes(x = date, y = port_ret)) +
+  geom_bar(stat = "identity") +
+  ggtitle("Monthly returns for the Minimum variance portfolio from 2011 to 2018") +
+  labs(x = "Date", y = "Portfolio Returns") +
+  scale_y_continuous(labels = scales::percent) +
+  geom_hline(yintercept = 0) +
+  theme_bw()
+
+port_ret_tbl %>%
+  mutate(cr = cumprod(1 + port_ret)) %>%
+  ggplot(aes(x = date, y = cr)) +
+  geom_line() +
+  ggtitle("Growth of $1 invested in the Minimum variance portfolio since 2011 to 2018") +
+  labs(x = "Date", y = "Growth of $1") +
+  theme_bw()
+
+
+```
+
+
+Next we will plot the efficient frontier and calculate the efficient frontier portfolio.
+
+```{r eff_frontier, warning=FALSE, message=FALSE}
+
+# Create a vector series for target returns
+
+tgt_ret <- seq(0, 0.01109935, length.out = 100)
+
+# Create empty vector to store all the Standard deviations
+
+eff_sd <- vector(mode = "numeric", length = length(tgt_ret))
+
+# Create empty vector to store all the Mean returns
+
+eff_mean <- vector(mode = "numeric", length = length(tgt_ret))
+
+# Create empty table to store all the different portfolio Weights
+
+eff_wt <- matrix(ncol = 7, nrow = length(tgt_ret))
+eff_wt <- tk_tbl(data.frame(eff_wt))
+colnames(eff_wt) <- colnames(returns)
+
+# Running the simulation
+
+for(i in seq_along(tgt_ret)) {
+  
+  opt <- portfolio.optim(returns, pm = tgt_ret[i])
+  eff_sd[i] <- opt$ps
+  eff_mean[i] <- opt$pm
+  eff_wt[i,] <- opt$pw
+  
+}
+
+# Creating the Portfolio Weights and mean/sd table
+
+eff_wt_tbl <- eff_wt %>%
+  mutate(mean = eff_mean,
+         sd = eff_sd,
+         index = 1:length(eff_wt$EEM))
+
+# Calculating the sharpe ratios
+# Using 0.075% as risk free rate
+
+sharpe <- (eff_mean - 0.00075)/eff_sd
+
+# We can now calculate the maximum sharpe ratio
+max(sharpe)
+
+# Which portfolio had maximum sharpe ratio
+
+eff_wt_tbl[which.max(sharpe),] %>%
+  gather(AGG:VEU,key = assets,value = wt) %>%
+  ggplot(aes(x = assets, y = wt)) +
+  geom_bar(stat = "identity") +
+  ggtitle("Portfolio weights for the highest Sharpe Ratio") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(x = "Assets", y = "Weight") +
+  theme_bw()
+  
+
+# Now we will plot the efficient frontier
+
+eff_wt_tbl %>%
+  mutate(sharpe = (mean - 0.0075)/sd) %>% # Adding the Sharpe ratio
+  ggplot(aes(x = sd, y = mean)) +
+  geom_point(color = "grey") +
+  geom_point(data = eff_wt_tbl[27,c(8,9)], mapping = aes(x = sd, y = mean), color = "red") +
+  geom_point(data = eff_wt_tbl[80,c(8,9)], mapping = aes(x = sd, y = mean), color = "blue") +
+  ggtitle("Mean and Standard Deviation for Efficient frontier portfolios",
+          subtitle = "Red dot denotes the minimum variance portfolio \nBlue dot denotes the tangency portfoltio (highest Sharpe ratio)") +
+  labs(x = "Standard Deviation", y = "Mean") +
+  scale_y_continuous(labels = scales::percent) +
+  scale_x_continuous(labels = scales::percent) +
+  coord_cartesian(xlim = c(0.007,0.027),
+                  ylim = c(0,0.0098)) +
+  theme_bw() 
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

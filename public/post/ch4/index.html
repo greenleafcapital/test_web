@@ -1,0 +1,867 @@
+<!DOCTYPE HTML>
+
+<html lang='en'>
+	<head>
+		<title>Chapter 4 &middot; TWIST</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href='/assets/css/main.css' />
+		
+		<noscript><link rel="stylesheet" href='/assets/css/noscript.css' /></noscript>
+	</head>
+
+	<body lang='en' class="is-loading">
+
+		
+			<div id="wrapper">
+
+                
+<header id="header">
+    <a href='/' class="logo">TWIST</a>
+</header>
+
+                
+
+<nav id="nav">
+    <ul class="links">
+        
+	    
+		
+		
+		
+		
+		
+    
+    
+    <li class=""> <a href="/">Home</a></li>
+	
+                
+            
+            
+	
+	
+	
+    
+    <li class=""> <a href="/about/">About</a></li>
+	
+                
+            
+            
+	
+	
+	
+    
+    <li class=""> <a href="/news/">News</a></li>
+	
+                
+            
+            
+	
+	
+	
+    
+    <li class=""> <a href="/ideas/">Ideas &amp; Resources</a></li>
+	
+                
+            
+            
+	
+	
+	
+    
+
+        
+    </ul>
+    
+</nav>
+
+
+
+				
+					<div id="main">
+
+						
+                        <section class="post">
+                            <header class="major">
+                                
+                                <span class="date">January 1, 2018</span>
+                                
+                                <h1>Chapter 4</h1>
+                                <p>Financial Modeling - Chapter 4</p>
+                            </header>
+                            
+                            <script src="/rmarkdown-libs/kePrint/kePrint.js"></script>
+
+
+<div id="chapter-4" class="section level2">
+<h2>Chapter 4</h2>
+<pre class="r"><code>library(tidyquant)
+library(ggthemes)
+library(timetk)
+library(tibbletime)
+library(rvest)
+library(knitr)
+library(kableExtra)</code></pre>
+<p>In this chapter we will use the Fama French 3 factors data file to calculate the long term stocks and risk free returns. We will also produce a portfolio and compare the risk and returns with the 3 factors model.</p>
+<p>The Fama French 3 factors model was downloaded from the following <a href="http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_CSV.zip">link</a></p>
+<p>First we will begin by loading the data directly from the website into R.</p>
+<pre class="r"><code>factors &lt;- &quot;F-F_Research_Data_Factors&quot;
+
+ff_web &lt;- paste(&quot;http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/&quot;, factors, &quot;_CSV.zip&quot;, sep = &quot;&quot;)
+
+ff_csv &lt;- paste(factors, &quot;.csv&quot;, sep = &quot;&quot;)
+
+temp = tempfile()
+
+download.file(ff_web,temp)
+
+ff_factors &lt;- read_csv(unzip(temp), skip = 3) # skip the first 3 lines of the Document</code></pre>
+<p>Once we have the file loaded we will need to clean it and make it useful for our needs.</p>
+<pre class="r"><code>#Checking the file 
+
+head(ff_factors)</code></pre>
+<pre><code>## # A tibble: 6 x 5
+##       X1 `Mkt-RF`   SMB   HML    RF
+##    &lt;int&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1 192607     2.96 -2.3  -2.87  0.22
+## 2 192608     2.64 -1.4   4.19  0.25
+## 3 192609     0.36 -1.32  0.01  0.23
+## 4 192610    -3.24  0.04  0.51  0.32
+## 5 192611     2.53 -0.2  -0.35  0.31
+## 6 192612     2.62 -0.04 -0.02  0.28</code></pre>
+<pre class="r"><code>tail(ff_factors)</code></pre>
+<pre><code>## # A tibble: 6 x 5
+##      X1 `Mkt-RF`    SMB    HML    RF
+##   &lt;int&gt;    &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;
+## 1  2013    35.2    7.27   1.35  0.02
+## 2  2014    11.7   -8     -1.58  0.02
+## 3  2015     0.07  -3.94  -9.56  0.02
+## 4  2016    13.3    6.6   22.9   0.2 
+## 5  2017    21.5   -4.79 -13.9   0.8 
+## 6    NA    NA     NA     NA    NA</code></pre>
+<pre class="r"><code>#The file seems to have monthly data as well as yearly data at the end
+#We will work with the monthly data and hence delete the yearly data
+
+ff_factors &lt;- ff_factors %&gt;%
+  rename(date = X1) %&gt;%
+  mutate(date = as.character(date)) %&gt;%
+  mutate(year = str_sub(date, start = 1, end = 4)) %&gt;%
+  mutate(month = str_sub(date, start = 5, end = 6)) %&gt;%
+  filter(month != &quot;&quot;) %&gt;%
+  select(-year, -month)
+
+# Now we will create a new date series and add that to our data table  
+
+date_ff &lt;- seq(ymd(&quot;1926-07--01&quot;), ymd(&quot;2018-07-01&quot;), by = &quot;months&quot;) - 1
+date_ff &lt;- date_ff[-1] 
+
+ff_factors &lt;- ff_factors %&gt;%
+  mutate(date = date_ff)
+
+#Changing names
+
+ff_factors &lt;- ff_factors %&gt;%
+   rename(risk_prem = `Mkt-RF`,
+         smb = SMB,
+         hml = HML,
+         rf = RF)
+
+# The FF data needs to be converted for it to be consistent with our percentage returns data. All we need to do is divide it by 100.
+# We are going to create a custom function that takes a number and divides it by 100
+
+division_func &lt;- function(x) {
+  x/100
+}
+
+# We will apply this function to our data frame
+
+ff_factors &lt;- tk_tbl(data.frame(apply(ff_factors[-1], 2, division_func))) %&gt;%
+  mutate(date = date_ff) %&gt;%
+  select(date,everything())</code></pre>
+<p>Lets now plot the Risk free rates and the Risk Premiums for the market returns</p>
+<pre class="r"><code>#Plotting Risk premium since 1926
+
+ff_factors %&gt;%
+  ggplot(aes(x = date, y = risk_prem)) +
+  geom_line() +
+  scale_x_date(date_breaks = &quot;5 years&quot;, date_labels = &quot;%Y&quot;) +
+  scale_y_continuous(breaks = seq(-0.3,0.5,0.05),
+                     labels = scales::percent) +
+  geom_hline(yintercept = 0) +
+  labs(x = &quot;Date&quot;, y = &quot;Risk Premium&quot;) +
+  ggtitle(&quot;Equity Risk Premium since 1926&quot;) +
+  theme(axis.text.x = element_text(angle = 45)) +
+  theme_bw()</code></pre>
+<p><img src="/post/ch4_files/figure-html/plot%201926%20rf%20and%20prem-1.png" width="672" /></p>
+<pre class="r"><code>#Plotting Risk free rate since 1926
+
+ff_factors %&gt;%
+  ggplot(aes(x = date, y = rf)) +
+  geom_line() +
+  scale_x_date(date_breaks = &quot;5 years&quot;, date_labels = &quot;%Y&quot;) +
+  scale_y_continuous(breaks = seq(0,0.02,0.001),
+                     labels = scales::percent) +
+  geom_hline(yintercept = 0) +
+  labs(x = &quot;Date&quot;, y = &quot;Risk Free rate&quot;) +
+  ggtitle(&quot;Risk Free rates since 1920&quot;,
+          subtitle = &quot;We can see that during depression, risk free rates drop to 0%&quot;) +
+  theme(axis.text.x = element_text(angle = 45),
+        panel.background = element_rect(fill = NA),
+        panel.grid.major.y = element_line(color = &quot;grey&quot;))</code></pre>
+<p><img src="/post/ch4_files/figure-html/plot%201926%20rf%20and%20prem-2.png" width="672" /></p>
+<pre class="r"><code>#Plotting Risk premium since 1990
+ff_factors %&gt;%
+  filter(date &gt;= &quot;1990-01-01&quot;) %&gt;%
+  ggplot(aes(x = date, y = risk_prem)) +
+  geom_line() +
+  scale_x_date(date_breaks = &quot;3 years&quot;, date_labels = &quot;%Y&quot;) +
+  scale_y_continuous(breaks = seq(-0.3,0.5,0.05),
+                     labels = scales::percent) +
+  geom_hline(yintercept = 0) +
+  labs(x = &quot;Date&quot;, y = &quot;Risk Premium&quot;) +
+  ggtitle(&quot;Equity Risk Premium since 1990&quot;) +
+   theme(axis.text.x = element_text(angle = 45),
+        panel.background = element_rect(fill = NA),
+        panel.grid.major.y = element_line(color = &quot;grey&quot;))</code></pre>
+<p><img src="/post/ch4_files/figure-html/plot%201990%20rf%20and%20prem-1.png" width="672" /></p>
+<p>Lets now look at the total returns from the stock market</p>
+<pre class="r"><code>ff_factors %&gt;%
+  mutate(market = risk_prem + rf) %&gt;%
+  mutate(market = if_else(date == &quot;1926-07-31&quot;, 0, market)) %&gt;%
+  mutate(cr = cumprod(1 + market)) %&gt;%
+  mutate(cum_returns = cr - 1) %&gt;%
+  ggplot(aes(x = date, y = cum_returns)) +
+  geom_line() +
+  scale_x_date(date_breaks = &quot;10 years&quot;, date_labels = &quot;%Y&quot;) +
+  ggtitle(&quot;Cumulative Stock market returns since 1926&quot;,
+          subtitle = &quot;A $1 investment in 1926 grew to about $6000&quot;) +
+  labs(x = &quot;Date&quot;, y = &quot;Cumulative Returns&quot;) +
+   theme(axis.text.x = element_text(angle = 45),
+        panel.background = element_rect(fill = NA),
+        panel.grid.major.y = element_line(color = &quot;grey&quot;))</code></pre>
+<p><img src="/post/ch4_files/figure-html/stock%20market%20returns-1.png" width="672" /></p>
+<p>Lets calculate the cumulative returns since 1990</p>
+<pre class="r"><code>ff_factors %&gt;%
+  mutate(market = risk_prem + rf) %&gt;%
+  filter(date &gt;= &quot;1989-12-31&quot;) %&gt;%
+  mutate(market = if_else(date == &quot;1989-12-31&quot;, 0, market)) %&gt;%
+  mutate(cr = cumprod(1 + market)) %&gt;%
+  mutate(cum_returns = cr - 1) %&gt;%
+  ggplot(aes(x = date, y = cum_returns)) +
+  geom_line() +
+  scale_x_date(date_breaks = &quot;2 years&quot;, date_labels = &quot;%Y&quot;) +
+  scale_y_continuous(breaks = seq(0,15,2)) +
+  ggtitle(&quot;Cumulative Stock market returns since 1990&quot;,
+          subtitle = &quot;A $1 investment would have increased to $14&quot;) +
+  labs(x = &quot;Date&quot;, y = &quot;Cumulative Returns&quot;) +
+   theme(axis.text.x = element_text(angle = 45),
+        panel.background = element_rect(fill = NA),
+        panel.grid.major.y = element_line(color = &quot;grey&quot;))</code></pre>
+<p><img src="/post/ch4_files/figure-html/stock%20market%20returns%201990-1.png" width="672" /></p>
+<div id="capital-asset-pricing-model-capm" class="section level4">
+<h4>Capital Asset Pricing Model (CAPM)</h4>
+<p>Capital asset pricing model (CAPM) is used to calculate the expected returns for an asset(for example Apple stock). The expected returns should equal the risk free rate plus the market risk premium adjusted for the volatility of the asset. This article goes into great detail to explain more about CAPM.</p>
+<p><a href="https://hbr.org/1982/01/does-the-capital-asset-pricing-model-work" class="uri">https://hbr.org/1982/01/does-the-capital-asset-pricing-model-work</a></p>
+<p>We will demonstrate how to use CAPM with actual stock market data. For our example we will use the Netflix stock.</p>
+<p>We will need the risk free rate, S&amp;P 500 returns(benchmark), Netflix returns from 2010</p>
+<pre class="r"><code># Download price data
+
+nflx_price &lt;- tq_get(&quot;NFLX&quot;,
+                     from = &quot;2010-01-01&quot;,
+                     to = &quot;2018-07-31&quot;,
+                     get = &quot;stock.prices&quot;)
+
+nflx_returns &lt;- nflx_price %&gt;%
+  tq_transmute(select = adjusted,
+               periodReturn,
+               period = &quot;monthly&quot;,
+               col_rename = &quot;nflx_returns&quot;)
+
+#Using SPY as a proxy for Market returns
+spx_price &lt;- tq_get(&quot;SPY&quot;,
+                    from = &quot;2010-01-1&quot;,
+                    to = &quot;2018-07-31&quot;,
+                    get = &quot;stock.prices&quot;)
+
+spx_returns &lt;- spx_price %&gt;%
+  tq_transmute(select = adjusted,
+               mutate_fun = periodReturn,
+               period = &quot;monthly&quot;,
+               col_rename = &quot;spx_returns&quot;)
+
+# Using the 3 month Tbill as a proxy for risk free rate
+
+tbill &lt;- tq_get(&quot;DGS3MO&quot;,
+                from = &quot;2010-01-01&quot;,
+                to = &quot;2018-07-31&quot;,
+                get = &quot;economic.data&quot;) %&gt;%
+  tq_transmute(mutate_fun = to.period,
+               period = &quot;months&quot;) %&gt;%
+  rename(risk_free = price) %&gt;%
+  mutate(risk_free = risk_free/100)
+
+# The above data is annualized yield
+# We have to convert from annualized yield to monthly yield
+
+tbill_monthly &lt;- tbill %&gt;%
+  mutate(risk_free = (1 + risk_free)^(1/12) - 1)
+  
+# Now we combine all the data into a data table
+
+data_table &lt;- nflx_returns %&gt;%
+  mutate(spx = spx_returns$spx_returns,
+         risk_free = tbill_monthly$risk_free) %&gt;%
+  mutate(nflx_excess = nflx_returns - risk_free) %&gt;%
+  mutate(spx_excess = spx - risk_free)
+
+# Using regression to calculate the coefficients
+
+capm &lt;- lm(data_table$nflx_returns ~ data_table$spx)
+
+nflx_beta &lt;- summary(capm)$coefficient[2]
+nflx_alpha &lt;- summary(capm)$coefficient[1]  
+
+tribble(~NFLX_Alpha,~NFLX_Beta,
+        nflx_alpha, nflx_beta) %&gt;%
+  kable()</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align:right;">
+NFLX_Alpha
+</th>
+<th style="text-align:right;">
+NFLX_Beta
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+0.0416659
+</td>
+<td style="text-align:right;">
+0.9724373
+</td>
+</tr>
+</tbody>
+</table>
+<p>This is a static Alpha and Beta for the time period selected(which was 2010 to 2018) We know that the alpha and beta for Netflix changed throughout its history.</p>
+<p>So we can calculate the rolling alpha and beta for Netflix.</p>
+<pre class="r"><code># For that we need to convert the data_table to an xts object
+
+data_table_xts &lt;- data_table %&gt;%
+  select(date, nflx_returns, spx) %&gt;%
+  tk_xts()
+
+coeffs_nflx &lt;- rollapply(data_table_xts,
+                    width = 12,
+                    FUN = function(X)
+                      {
+                      roll.reg = lm(nflx_returns ~ spx,
+                                    data = as.data.frame(X))
+                                    return(roll.reg$coef)
+                    },
+                    by.column = FALSE)  
+
+coeffs_nflx &lt;- coeffs_nflx %&gt;%
+  tk_tbl() %&gt;%
+  rename(alpha = X.Intercept.,
+         beta = spx,
+         date = index)
+
+coeffs_nflx %&gt;%
+  na.omit() %&gt;%
+  ggplot(aes(x = date, y = alpha)) +
+  geom_line() +
+  ggtitle(&quot;Netflix rolling Alpha since 2011 vs S&amp;P 500&quot;) +
+  labs(x = &quot;Date&quot;, y = &quot;Alpha&quot;) +
+  scale_y_continuous(labels = scales::percent) +
+  geom_hline(yintercept = 0) +
+  theme_bw()</code></pre>
+<p><img src="/post/ch4_files/figure-html/rolling%20alpha%20beta%20NFLX-1.png" width="672" /></p>
+<pre class="r"><code>coeffs_nflx %&gt;%
+  na.omit() %&gt;%
+  ggplot(aes(x = date, y = beta)) +
+  geom_line() +
+  ggtitle(&quot;Netflix rolling Beta since 2011 vs S&amp;P 500&quot;) +
+  labs(x = &quot;Date&quot;, y = &quot;Beta&quot;) +
+  geom_hline(yintercept = 0) +
+  theme_bw()</code></pre>
+<p><img src="/post/ch4_files/figure-html/rolling%20alpha%20beta%20NFLX-2.png" width="672" /></p>
+<p>Next we will build a portfolio of five stocks and calculate its alpha and beta versus the benchmark S&amp;P 500 portfolio.</p>
+<pre class="r"><code># We will randomly select 5 tickers from the S&amp;P 500 stocks to avoid any bias
+# We have been using too much of the FANG stocks
+
+# First we will download the S&amp;P 500 tickers from Wikipedia
+
+sp500_wiki &lt;- read_html(&quot;https://en.wikipedia.org/wiki/List_of_S%26P_500_companies&quot;)
+
+sp500_tickers &lt;- sp500_wiki %&gt;%
+  html_nodes(&quot;td:nth-child(1) .text&quot;) %&gt;%
+  html_text()
+
+#Run the below comman to generate 5 ticker symbols. Remove the comment symbol &quot;#&quot;
+
+#sample(sp500_tickers, size = 5) 
+
+# Note - When you run this command you will get a different sample of tickers.
+# But for us the tickers were as below
+
+
+portfolio_tickers &lt;- c(&quot;GILD&quot;, &quot;BA&quot;, &quot;XRAY&quot;, &quot;APTV&quot;, &quot;DHI&quot;)
+
+# Our portfolio has Gilead, Boeing, Denstply, Aptiv, DH Horton
+# Below we will specify weight to the stock randomly
+
+# We will generate random weights for the stocks such that they sum to 100% (no leverage or short selling)
+
+set.seed(1589) # We need to set this so we don&#39;t get different numbers each time we run this
+
+w &lt;- diff(c(0,sort(runif(4)),1)) # again this will be different when you run it.
+
+# Since its using a random method
+# See below our portfolio with weights
+
+portfolio_weights &lt;- tibble(symbol = portfolio_tickers,
+                            weight = w)
+portfolio_weights %&gt;%
+  kable()</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+symbol
+</th>
+<th style="text-align:right;">
+weight
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+GILD
+</td>
+<td style="text-align:right;">
+0.2311845
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+BA
+</td>
+<td style="text-align:right;">
+0.0585353
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+XRAY
+</td>
+<td style="text-align:right;">
+0.0448639
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+APTV
+</td>
+<td style="text-align:right;">
+0.2397208
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+DHI
+</td>
+<td style="text-align:right;">
+0.4256955
+</td>
+</tr>
+</tbody>
+</table>
+<p>We could have just picked 5 tickers on our own and assigned a round number weight, but we wanted to demonstrate the ability to download data directly from a website using R and also how to generate random numbers.</p>
+<p>Next we will download the price data and calculate the performance.</p>
+<pre class="r"><code># Download stock prices
+stock_price &lt;- tq_get(portfolio_tickers,
+                          from = &quot;2015-01-01&quot;,
+                          get = &quot;stock.prices&quot;)
+
+# Calculate the stock returns
+
+stock_returns &lt;- stock_price %&gt;%
+  group_by(symbol) %&gt;%
+  tq_transmute(select = adjusted,
+               mutate_fun = periodReturn,
+               period = &quot;monthly&quot;,
+               col_rename = &quot;returns&quot;)
+  
+# Calculate the portfolio returns
+
+portfolio_returns &lt;- stock_returns %&gt;%
+  tq_portfolio(assets_col = symbol,
+               returns_col = returns,
+               weights = portfolio_weights,
+               col_rename = &quot;port_ret&quot;)
+
+# Now we will download the the Benchmark Returns. In our case S&amp;P 500 
+
+benchmark_price &lt;- tq_get(&quot;SPY&quot;,
+                          from = &quot;2015-01-01&quot;,
+                          get = &quot;stock.prices&quot;)
+
+benchmark_returns &lt;- benchmark_price %&gt;%
+  tq_transmute(select = adjusted,
+               mutate_fun = periodReturn,
+               period = &quot;monthly&quot;,
+               col_rename = &quot;spx&quot;)
+
+# Now we will download the Risk free asset returns. 
+# We will use the 3 month Tbills for our purpose
+
+tbill &lt;- tq_get(&quot;DGS3MO&quot;,
+                      from = &quot;2015-01-01&quot;,
+                      get = &quot;economic.data&quot;) %&gt;%
+  tq_transmute(mutate_fun = to.period,
+               period = &quot;months&quot;) %&gt;%
+  rename(risk_free = price) %&gt;%
+  mutate(risk_free = risk_free/100)
+
+# We have to convert from annualised yield to monthly yield
+
+tbill_monthly &lt;- tbill %&gt;%
+  mutate(risk_free = (1 + risk_free)^(1/12) - 1)
+
+
+# Next we will combine all the data
+
+comb_data &lt;- portfolio_returns %&gt;%
+  mutate(benchmark = benchmark_returns$spx,
+         risk_free = tbill_monthly$risk_free) %&gt;%
+  mutate(port_ex = port_ret - risk_free,
+         bench_ex = benchmark - risk_free)
+
+#Next we run regression on the excess returns
+
+capm_portfolio &lt;- lm(comb_data$port_ex ~ comb_data$bench_ex)
+summary(capm_portfolio)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = comb_data$port_ex ~ comb_data$bench_ex)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.11029 -0.02149 -0.00080  0.02549  0.06655 
+## 
+## Coefficients:
+##                     Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)        0.0008174  0.0055607   0.147    0.884    
+## comb_data$bench_ex 1.2137202  0.1855551   6.541 6.62e-08 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.03531 on 42 degrees of freedom
+## Multiple R-squared:  0.5046, Adjusted R-squared:  0.4928 
+## F-statistic: 42.78 on 1 and 42 DF,  p-value: 6.615e-08</code></pre>
+<pre class="r"><code>portfolio_alpha &lt;- capm_portfolio$coefficients[1]
+portfolio_beta &lt;- capm_portfolio$coefficients[2]
+
+tribble(~Alpha,~Beta,
+        portfolio_alpha, portfolio_beta) %&gt;%
+  kable()</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align:right;">
+Alpha
+</th>
+<th style="text-align:right;">
+Beta
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+0.0008174
+</td>
+<td style="text-align:right;">
+1.21372
+</td>
+</tr>
+</tbody>
+</table>
+<p>Similar to Netflix stock we will plot the rolling Alpha and Beta for our Portfolio.</p>
+<pre class="r"><code>#Converting to an xts object
+
+comb_data_xts &lt;- comb_data %&gt;%
+  tk_xts()
+
+coeffs_portfolio &lt;- rollapply(comb_data_xts,
+                    width = 12,
+                    FUN = function(X)
+                      {
+                      roll.reg = lm(port_ret ~ benchmark,
+                                    data = as.data.frame(X))
+                                    return(roll.reg$coef)
+                    },
+                    by.column = FALSE)  
+
+coeffs_portfolio &lt;- coeffs_portfolio %&gt;%
+  tk_tbl() %&gt;%
+  rename(alpha = X.Intercept.,
+         beta = benchmark,
+         date = index)
+
+coeffs_portfolio %&gt;%
+  na.omit() %&gt;%
+  ggplot(aes(x = date, y = alpha)) +
+  geom_line() +
+  ggtitle(&quot;Portfolio rolling Alpha since 2011 vs S&amp;P 500&quot;) +
+  labs(x = &quot;Date&quot;, y = &quot;Alpha&quot;) +
+  scale_y_continuous(labels = scales::percent) +
+  geom_hline(yintercept = 0) +
+  theme_bw()</code></pre>
+<p><img src="/post/ch4_files/figure-html/portfolio%20rolling%20alpha%20and%20beta-1.png" width="672" /></p>
+<pre class="r"><code>coeffs_portfolio %&gt;%
+  na.omit() %&gt;%
+  ggplot(aes(x = date, y = beta)) +
+  geom_line() +
+  ggtitle(&quot;Portfolio rolling Beta since 2011 vs S&amp;P 500&quot;) +
+  labs(x = &quot;Date&quot;, y = &quot;Beta&quot;) +
+  geom_hline(yintercept = 0) +
+  theme_bw()</code></pre>
+<p><img src="/post/ch4_files/figure-html/portfolio%20rolling%20alpha%20and%20beta-2.png" width="672" /></p>
+<p>Next we will use the Fama French 3 factor model for calculating the alpha and beta for our portfolio.</p>
+<pre class="r"><code># We will first download the file from the website
+
+# This procedure is the same one we used previously in this chapter.
+# You can use this as a practice
+
+ff_csv &lt;- paste(&quot;F-F_Research_Data_Factors_CSV&quot;, &quot;.csv&quot;,sep = &quot;&quot;)
+
+ff_web_file &lt;- &quot;F-F_Research_Data_Factors_CSV&quot;
+
+fama_url &lt;- paste(&quot;http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/&quot;, ff_web_file, &quot;.zip&quot;, sep = &quot;&quot;)
+
+temp &lt;- tempfile()
+
+download.file(fama_url, temp)
+
+ff_data &lt;- read_csv(unzip(temp),skip = 3)
+
+
+ff_factors &lt;- ff_data %&gt;%
+  rename(date = X1) %&gt;%
+  mutate(date = as.character(date)) %&gt;%
+  mutate(year = str_sub(date, start = 1, end = 4)) %&gt;%
+  mutate(month = str_sub(date, start = 5, end = 6)) %&gt;%
+  filter(month != &quot;&quot;) %&gt;%
+  select(-year, -month)
+
+# Now we will create a new date series and add that to our data table  
+
+date_ff &lt;- seq(ymd(&quot;1926-07--01&quot;), ymd(&quot;2018-07-01&quot;), by = &quot;months&quot;) - 1
+date_ff &lt;- date_ff[-1] 
+
+ff_factors &lt;- ff_factors %&gt;%
+  mutate(date = date_ff)
+
+#Changing names
+
+ff_factors &lt;- ff_factors %&gt;%
+   rename(risk_prem = `Mkt-RF`,
+         smb = SMB,
+         hml = HML,
+         rf = RF)
+
+
+
+division_func &lt;- function(x) {
+  x/100
+}
+
+
+ff_factors &lt;- tk_tbl(data.frame(apply(ff_factors[-1], 2, division_func))) %&gt;%
+  mutate(date = date_ff) %&gt;%
+  select(date,everything())
+
+
+# The FF data is available only through June 2018.
+# Our portfolio data is from Jan 2015 to Aug 2018. 
+# So we need to align our portfolio data with FF data
+
+portfolio_returns &lt;- portfolio_returns %&gt;%
+  filter(date &lt;= &quot;2018-06-30&quot;) 
+
+ff_factors &lt;- ff_factors %&gt;%
+  filter(date &gt;= &quot;2015-01-01&quot;) 
+
+
+# Now we add our portfolio returns to the Ff data
+
+ff_portfolio &lt;- ff_factors %&gt;%
+  mutate(portfolio = portfolio_returns$port_ret)
+
+# Next we will run the regression 
+
+port_ff_reg &lt;- lm(ff_portfolio$portfolio ~ ff_portfolio$risk_prem + smb + hml, data = ff_portfolio)
+
+portfolio_alpha_ff &lt;- port_ff_reg$coefficients[1]
+portfolio_beta_ff &lt;- port_ff_reg$coefficients[2]
+
+# We will create a table to combine for regression data
+
+alf_beta_tbl &lt;- tribble(~Method,~Alpha,~Beta,
+                        &quot;CAPM&quot;, portfolio_alpha, portfolio_beta,
+                        &quot;Fama &amp; French&quot;, portfolio_alpha_ff, portfolio_beta_ff)
+
+alf_beta_tbl %&gt;%
+  kable(caption = 
+          
+          &quot;Calculating Alpha and Beta using different methods&quot;) %&gt;%
+  kable_styling(bootstrap_options = &quot;hover&quot;, full_width = FALSE)</code></pre>
+<table class="table table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+(#tab:fama french portfolio)Calculating Alpha and Beta using different methods
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Method
+</th>
+<th style="text-align:right;">
+Alpha
+</th>
+<th style="text-align:right;">
+Beta
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+CAPM
+</td>
+<td style="text-align:right;">
+0.0008174
+</td>
+<td style="text-align:right;">
+1.213720
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Fama &amp; French
+</td>
+<td style="text-align:right;">
+-0.0009196
+</td>
+<td style="text-align:right;">
+1.168209
+</td>
+</tr>
+</tbody>
+</table>
+<p>We can see above how the two methods compare with each other. Our portfolio had a slight out performance using the CAPM method, but under performed when we used the Fama &amp; French model.</p>
+</div>
+</div>
+
+
+                            
+                            
+                            
+                            
+                            
+                        </section>
+
+					</div>
+
+                    
+
+<footer id="footer">
+    
+    <section>
+        <form method="post" action="post-action">
+            <div class="field">
+                <label for="name">Name</label>
+                <input type="text" name="name" id="name" />
+            </div>
+            <div class="field">
+                <label for="email">Email</label>
+                <input type="text" name="email" id="email" />
+            </div>
+            <div class="field">
+                <label for="message">Message</label>
+                <textarea name="message" id="message" rows="3"></textarea>
+            </div>
+            <ul class="actions">
+                <li><input type="submit" value='Send A Message' /></li>
+            </ul>
+        </form>
+    </section>
+    
+    <section class="split contact">
+        
+        <section class="alt">
+            <h3>Address</h3>
+            <p>
+                
+                     1234 Somewhere Road #87257
+                
+                     <br/>  Nashville, TN 00000-0000
+                
+            </p>
+        </section>
+        
+        
+        <section>
+            <h3>Phone</h3>
+            <p><a href="tel:%28800%29%20000-0000">(800) 000-0000</a></p>
+        </section>
+        
+        
+        <section>
+            <h3>Email</h3>
+            <p><a href="mailto:someone@untitled.tld">someone@untitled.tld</a></p>
+        </section>
+        
+        
+        <section>
+            <h3>Social</h3>
+            <ul class="icons alt">
+                
+                
+                
+                
+                
+                <li><a href="https://github.com/" class="icon alt fa-github"><span class="label">GitHub</span></a></li>
+                
+                
+                
+                
+                
+            </ul>
+        </section>
+        
+    </section>
+</footer>
+
+                    
+>
+
+
+            </div>
+            
+            
+<script src='/assets/js/jquery.min.js'></script>
+<script src='/assets/js/jquery.scrollex.min.js'></script>
+<script src='/assets/js/jquery.scrolly.min.js'></script>
+<script src='/assets/js/skel.min.js'></script>
+<script src='/assets/js/util.js'></script>
+<script src='/assets/js/main.js'></script>
+
+
+	</body>
+</html>

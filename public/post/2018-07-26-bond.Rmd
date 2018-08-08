@@ -1,0 +1,99 @@
+---
+title: "Bond Market"
+author: 'Team Green'
+date: '2018-07-26'
+slug: bond
+description: "How have bonds done lately?"
+cover: "int charts-1.png"
+categories: []
+tags:
+  - market
+---
+
+```{r lib, echo=FALSE,warning=FALSE,message=FALSE,include=FALSE}
+
+library(tidyquant)
+library(ggthemes)
+library(dygraphs)
+
+```
+
+
+
+```{r bonds price, echo=FALSE,warning=FALSE,message=FALSE,include=FALSE}
+
+bnd_returns <- read.csv("~/Documents/greenleaf_data/bonds_int.csv")
+
+bnd_lng_returns <- read.csv("~/Documents/greenleaf_data/bonds_lng.csv")
+
+ten_year <- tq_get("^TNX",
+                   from = '1990-01-01',
+                   get = "stock.prices")
+
+
+```
+
+
+```{r ten yr, echo=FALSE,warning=FALSE,message=FALSE}
+
+ten_year %>%
+  mutate(adjusted = adjusted/100) %>%
+  ggplot(aes(x = date, y = adjusted)) +
+  geom_line(color = "#FF9900") +
+  theme_bw() +
+  ggtitle("Ten Year Interest Rates Since 1990") +
+  labs(x = "Date", y = "Interest Rates") +
+  scale_y_continuous(labels = scales::percent)
+  
+
+```
+
+
+
+Year 2018 has not been a good one for the bond investors. Since the summer of 2017, interest rates have been rising. 
+
+The long term interest rates had been trending lower since 1980s. In the chart above rates reached a high of 8% and since then they kept making lower lows. Currently the ten year rates are near the an important key level at 3%. From here the future path interest will decide which way the trend moves. Do we break out of the 3% resistance level? or do we fade back lower? It will be interesting to see.
+
+Below are the bond performance for different maturities. Even though the rates were trending lower, there were a few years when bonds suffered negative returns. Similarly it is possible that even if interest rates trend higher, we could get some years where bonds give positive returns.
+
+
+
+```{r int charts, echo=FALSE,warning=FALSE,message=FALSE}
+
+bnd_returns %>%
+  mutate(year = year(date)) %>%
+  ggplot(aes(x = year, y = returns, fill = symbol)) +
+  geom_bar(stat = 'identity', position = "dodge", width = 0.75) +
+  scale_x_continuous(breaks = seq(2007, 2018, by = 1)) +
+  ggtitle('Yearly returns for Intermediate bond since 2007') +
+  labs(x = 'Year', y = "Returns") +
+  scale_y_continuous(labels = scales::percent,
+                     breaks = seq(-0.3,0.5,0.05)) +
+  theme_bw() +
+  scale_fill_brewer(palette="Set2")
+
+
+
+
+```
+
+
+
+
+```{r lng charts, echo=FALSE,warning=FALSE,message=FALSE}
+
+bnd_lng_returns %>%
+  mutate(year = year(date)) %>%
+  ggplot(aes(x = year, y = returns, fill = symbol)) +
+  geom_bar(stat = 'identity', position = "dodge", width = 0.75) +
+  scale_x_continuous(breaks = seq(2005,2018 , by = 1)) +
+  ggtitle('Yearly returns for Long term bonds since 2007') +
+  labs(x = 'Year', y = "Returns") +
+  scale_y_continuous(labels = scales::percent,
+                     breaks = seq(-0.3,0.5,0.05)) +
+  theme_bw() +
+  scale_fill_brewer(palette="Set2")
+
+
+```
+

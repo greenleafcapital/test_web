@@ -1,0 +1,523 @@
+<!DOCTYPE HTML>
+
+<html lang='en'>
+	<head>
+		<title>Chapter 1 &middot; TWIST</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href='/assets/css/main.css' />
+		
+		<noscript><link rel="stylesheet" href='/assets/css/noscript.css' /></noscript>
+	</head>
+
+	<body lang='en' class="is-loading">
+
+		
+			<div id="wrapper">
+
+                
+<header id="header">
+    <a href='/' class="logo">TWIST</a>
+</header>
+
+                
+
+<nav id="nav">
+    <ul class="links">
+        
+	    
+		
+		
+		
+		
+		
+    
+    
+    <li class=""> <a href="/">Home</a></li>
+	
+                
+            
+            
+	
+	
+	
+    
+    <li class=""> <a href="/about/">About</a></li>
+	
+                
+            
+            
+	
+	
+	
+    
+    <li class=""> <a href="/news/">News</a></li>
+	
+                
+            
+            
+	
+	
+	
+    
+    <li class=""> <a href="/ideas/">Ideas &amp; Resources</a></li>
+	
+                
+            
+            
+	
+	
+	
+    
+
+        
+    </ul>
+    
+</nav>
+
+
+
+				
+					<div id="main">
+
+						
+                        <section class="post">
+                            <header class="major">
+                                
+                                <span class="date">January 1, 2018</span>
+                                
+                                <h1>Chapter 1</h1>
+                                <p>Financial Modeling - Chapter 1</p>
+                            </header>
+                            
+                            <div id="financial-modeling" class="section level3">
+<h3>Financial Modeling</h3>
+<div id="chapter-1" class="section level4">
+<h4>Chapter 1</h4>
+<p>Calculating the present value of with equal payments</p>
+<pre class="r"><code>library(FinCal)
+library(tidyquant)
+library(jrvFinance)
+library(ggthemes)
+library(dygraphs)
+library(timetk)
+library(knitr)
+library(kableExtra)
+
+
+r &lt;- 0.1
+cf &lt;- tribble(~Year,~cf,
+              1,100,
+              2,100,
+              3,100,
+              4,100,
+              5,100)
+cf %&gt;%
+  mutate(pv = cf/(1+r)^Year) %&gt;%
+  .[[3]] %&gt;%
+  sum()</code></pre>
+<pre><code>## [1] 379.0787</code></pre>
+<p>Calculating the present value of uneven payments.</p>
+<pre class="r"><code>cf &lt;- tribble(~Year,~cf,
+              1,100,
+              2,200,
+              3,300,
+              4,400,
+              5,500)
+cf %&gt;%
+  mutate(pv = cf/(1+r)^Year) %&gt;%
+  .[[3]] %&gt;%
+  sum()</code></pre>
+<pre><code>## [1] 1065.259</code></pre>
+<p>Calculating the PV with negative cash flow</p>
+<pre class="r"><code>cf &lt;- tribble(~Year,~cf,
+              0,-250,
+              1,100,
+              2,100,
+              3,100,
+              4,100,
+              5,100)
+              
+cf %&gt;%
+  mutate(pv = cf/(1+r)^Year) %&gt;%
+  .[[3]] %&gt;%
+  sum()</code></pre>
+<pre><code>## [1] 129.0787</code></pre>
+<p>Calculating the present value of a finite annuity</p>
+<pre class="r"><code>pmt &lt;- 1000
+n &lt;- 5
+r &lt;- 0.12
+
+cf &lt;- tibble(period = 1:5,
+             pmt = pmt)
+
+cf %&gt;%
+  mutate(pv = pmt/(1+r)^period) %&gt;%
+  .[[3]] %&gt;%
+  sum()</code></pre>
+<pre><code>## [1] 3604.776</code></pre>
+<p>Calculating the present value infinite annuity</p>
+<pre class="r"><code>pmt &lt;- 1000
+r &lt;- 0.12
+
+annuity &lt;- pmt/r
+annuity</code></pre>
+<pre><code>## [1] 8333.333</code></pre>
+<p>Calculating present value of finite growing annuity</p>
+<pre class="r"><code>payment &lt;- 1000
+growth &lt;- 0.06
+n &lt;- 5
+rate &lt;- 0.12
+
+cf &lt;- tibble(period = 1:5,
+             pmt = 1000)
+
+cf %&gt;%
+  mutate(pmt = payment*(1+growth)^(period - 1)) %&gt;%
+  mutate(pv = pmt/(1+rate)^period)</code></pre>
+<pre><code>## # A tibble: 5 x 3
+##   period   pmt    pv
+##    &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1      1 1000   893.
+## 2      2 1060   845.
+## 3      3 1124.  800.
+## 4      4 1191.  757.
+## 5      5 1262.  716.</code></pre>
+<pre class="r"><code>cf %&gt;%
+  mutate(pmt = payment*(1+growth)^(period - 1)) %&gt;%
+  mutate(pv = pmt/(1+rate)^period) %&gt;%
+  .[[3]] %&gt;%
+  sum()</code></pre>
+<pre><code>## [1] 4010.914</code></pre>
+<p>Calculating present value of infinite growing annuity</p>
+<pre class="r"><code>payment &lt;- 1000
+growth &lt;- 0.06
+rate &lt;- 0.12
+
+annuity &lt;- payment/(rate - growth)
+annuity</code></pre>
+<pre><code>## [1] 16666.67</code></pre>
+<p>Calculating the Internal rate of return</p>
+<pre class="r"><code>cf &lt;- tibble(Year = 0:5,
+             cf = c(-800,200,250,300,350,400))
+
+#using the IRR formula from the jrvFinance library
+
+irr(cf$cf)</code></pre>
+<pre><code>## [1] 0.2216031</code></pre>
+<p>Calculating the loan payments</p>
+<pre class="r"><code>car_loan &lt;- 10000
+interest &lt;- 0.07
+years &lt;- 6
+
+car_payments &lt;- pmt(pv = -car_loan,r = interest, n = years, fv = 0)
+car_payments</code></pre>
+<pre><code>## [1] 2097.958</code></pre>
+<pre class="r"><code>car_loan &lt;- 10000
+interest &lt;- 0.07
+years &lt;- 6
+car_payments &lt;- pmt(pv = -car_loan,r = interest, n = years, fv = 0)
+
+loan_table &lt;- matrix(ncol = 6, nrow = 6)
+loan_table[1,1] &lt;- 1
+loan_table[1,2] &lt;- car_loan
+loan_table[1,3] &lt;- car_payments
+loan_table[1,4] &lt;- car_loan * interest
+loan_table[1,5] &lt;- car_payments - (car_loan * interest)
+loan_table[1,6] &lt;- car_loan - (car_payments - (car_loan * interest))
+
+for(i in 1:5) {
+  
+  loan_table[c(i+1),1] &lt;- i + 1
+  loan_table[c(i+1),2] &lt;- loan_table[i, 6]
+  loan_table[c(i+1),3] &lt;- car_payments
+  loan_table[c(i+1),4] &lt;- loan_table[c(i+1),2] * interest
+  loan_table[c(i+1),5] &lt;- car_payments - (loan_table[c(i+1),2] * interest)
+  loan_table[c(i+1),6] &lt;- loan_table[c(i+1),2] - (car_payments - (loan_table[c(i+1),2] * interest))
+  
+}
+
+loan_table &lt;- tk_tbl(as.data.frame(loan_table))
+colnames(loan_table) &lt;- paste(c(&quot;Year&quot;, &#39;Initial_Balance&#39;, &quot;Payments&quot;, &quot;Interest&quot;,
+                                &quot;Principal&quot;, &quot;Ending_Balance&quot;))
+
+loan_table &lt;- loan_table %&gt;%
+  mutate(Ending_Balance = round(Ending_Balance,3))
+
+loan_table</code></pre>
+<pre><code>## # A tibble: 6 x 6
+##    Year Initial_Balance Payments Interest Principal Ending_Balance
+##   &lt;dbl&gt;           &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;          &lt;dbl&gt;
+## 1     1          10000     2098.     700.     1398.          8602.
+## 2     2           8602.    2098.     602.     1496.          7106.
+## 3     3           7106.    2098.     497.     1601.          5506.
+## 4     4           5506.    2098.     385.     1713.          3793.
+## 5     5           3793.    2098.     266.     1832.          1961.
+## 6     6           1961.    2098.     137.     1961.             0</code></pre>
+<p>Calculating the Future value of deposit in an account</p>
+<pre class="r"><code>#Simple future value
+
+interest &lt;- 0.1
+deposit &lt;- 1000
+
+fv_table &lt;- tibble(Year = 1:10,
+                   beg_val = 0,
+                   int = 0,
+                   end_val = 0)
+
+fv_table &lt;- fv_table %&gt;%
+  mutate(beg_val = if_else(Year == 1, deposit,beg_val)) %&gt;%
+  mutate(int = if_else(Year == 1, beg_val * interest, int)) %&gt;%
+  mutate(end_val = if_else(Year == 1, beg_val + int, end_val))
+
+for(i in 2:10) {
+  
+  fv_table[i,1] &lt;- i
+  fv_table[i,2] &lt;- fv_table[c(i-1),4]
+  fv_table[i,3] &lt;- fv_table[i,2] * interest
+  fv_table[i,4] &lt;- fv_table[i,2] + fv_table[i,3]
+  
+}
+
+fv_table</code></pre>
+<pre><code>## # A tibble: 10 x 4
+##     Year beg_val   int end_val
+##    &lt;int&gt;   &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;
+##  1     1   1000   100    1100 
+##  2     2   1100   110    1210 
+##  3     3   1210   121    1331 
+##  4     4   1331   133.   1464.
+##  5     5   1464.  146.   1611.
+##  6     6   1611.  161.   1772.
+##  7     7   1772.  177.   1949.
+##  8     8   1949.  195.   2144.
+##  9     9   2144.  214.   2358.
+## 10    10   2358.  236.   2594.</code></pre>
+<p>Calculating the future value of regular annual deposits</p>
+<pre class="r"><code>interest &lt;- 0.1
+annual_deposit &lt;- 1000
+n = 10  
+
+fv_table &lt;- tibble(Year = 1:10,
+                   beg_value = 0,
+                   deposit = 0,
+                   int = 0,
+                   end_value = 0)
+
+fv_table[1,2] &lt;- 0
+fv_table[1,3] &lt;- annual_deposit
+fv_table[1,4] &lt;- annual_deposit * interest
+fv_table[1,5] &lt;- fv_table[1,3] + fv_table[1,4]
+
+
+for(i in 2:10) {
+  
+  fv_table[i,2] &lt;- fv_table[c(i-1),5]
+  fv_table[i,3] &lt;- annual_deposit
+  fv_table[i,4] &lt;- (fv_table[i,2] + annual_deposit) * interest
+  fv_table[i,5] &lt;- fv_table[i,2] + fv_table[i,3] + fv_table[i,4]
+  
+}
+
+fv_table</code></pre>
+<pre><code>## # A tibble: 10 x 5
+##     Year beg_value deposit   int end_value
+##    &lt;int&gt;     &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;
+##  1     1        0     1000  100      1100 
+##  2     2     1100     1000  210      2310 
+##  3     3     2310     1000  331      3641 
+##  4     4     3641     1000  464.     5105.
+##  5     5     5105.    1000  611.     6716.
+##  6     6     6716.    1000  772.     8487.
+##  7     7     8487.    1000  949.    10436.
+##  8     8    10436.    1000 1144.    12579.
+##  9     9    12579.    1000 1358.    14937.
+## 10    10    14937.    1000 1594.    17531.</code></pre>
+<ul>
+<li>Retirement problem</li>
+</ul>
+<p>Suppose the current age is 55 years and intention to retire is 60 (5 years to retirement). After retirement, plan is to withdraw $30,000 for the next 8 years. Expected returns on investments is 8%. How much should be deposited each year?</p>
+<pre class="r"><code># Divide the problem into two parts 
+#Part 1 Age 55 to 60
+#Part 2 Age 60 to 68
+
+interest &lt;- 0.08
+n1 = 5 #part 1
+n2 = 8 #part 2
+pmt_in_retirement &lt;- 30000
+
+#first calculate amount required to support withdrawing $30000/year during retirement
+
+retirment_amount &lt;- pv(pmt = 30000, r = interest, n = n2, fv = 0, type = 1) #type = 1, withdrawing at the beginning period
+retirment_amount</code></pre>
+<pre><code>## [1] -186191.1</code></pre>
+<pre class="r"><code>#Calculating the payments required to reach $186191 in retirement
+
+payment &lt;- pmt(pv = 0, fv = retirment_amount, r = interest, n = n1, type = 1)
+
+payment</code></pre>
+<pre><code>## [1] 29386.55</code></pre>
+<pre class="r"><code>cat(&quot;We need&quot;, sprintf(&quot;$%.f&quot;, payment), &quot;in savings each year to withdraw $30000 in retirement&quot;)</code></pre>
+<pre><code>## We need $29387 in savings each year to withdraw $30000 in retirement</code></pre>
+<p>Calculating interest rates at different compounding periods</p>
+<pre class="r"><code>interest &lt;- 0.05
+initial_dep &lt;- 1000
+c_period &lt;- 2 # compounding periods
+c_int &lt;- interest/c_period #Interest for compounding period
+aft_one_year &lt;- initial_dep * (1 + c_int)^c_period
+aft_one_year</code></pre>
+<pre><code>## [1] 1050.625</code></pre>
+<pre class="r"><code>cont_comp &lt;- 1000 * exp(interest)
+cont_comp</code></pre>
+<pre><code>## [1] 1051.271</code></pre>
+<pre class="r"><code>#Compounding for different time period table
+
+cmp_tbl &lt;- tibble(period = c(1,2,10,20,50,100,150,300,800),
+                  end_val = 0)
+
+cmp_tbl %&gt;%
+  mutate(end_val = initial_dep * (1 + interest/period)^period)</code></pre>
+<pre><code>## # A tibble: 9 x 2
+##   period end_val
+##    &lt;dbl&gt;   &lt;dbl&gt;
+## 1      1   1050 
+## 2      2   1051.
+## 3     10   1051.
+## 4     20   1051.
+## 5     50   1051.
+## 6    100   1051.
+## 7    150   1051.
+## 8    300   1051.
+## 9    800   1051.</code></pre>
+<pre class="r"><code>cmp_tbl %&gt;%
+  mutate(end_val = initial_dep * (1 + interest/period)^period) %&gt;%
+  ggplot(aes(x = period, y = end_val)) +
+  geom_line()</code></pre>
+<p><img src="/post/Ch1_files/figure-html/comp%20rates-1.png" width="672" /></p>
+<p>Continuous discounting</p>
+<pre class="r"><code>interest &lt;- 0.08
+
+cont_tbl &lt;- tibble(Year = 1:5,
+                   cash_flow = seq(100,500,100))
+
+cont_tbl %&gt;%
+  mutate(pv = cash_flow * exp(-interest * Year))</code></pre>
+<pre><code>## # A tibble: 5 x 3
+##    Year cash_flow    pv
+##   &lt;int&gt;     &lt;dbl&gt; &lt;dbl&gt;
+## 1     1       100  92.3
+## 2     2       200 170. 
+## 3     3       300 236. 
+## 4     4       400 290. 
+## 5     5       500 335.</code></pre>
+<p>Calculating Returns from price data</p>
+<pre class="r"><code>init_dep &lt;- 1000
+end_val &lt;- 1200
+cmp_period &lt;- 2
+
+#Continuous return
+log(end_val/init_dep)</code></pre>
+<pre><code>## [1] 0.1823216</code></pre>
+<pre class="r"><code># Implied annual return
+((end_val/init_dep)^(1/cmp_period) - 1) * cmp_period</code></pre>
+<pre><code>## [1] 0.1908902</code></pre>
+</div>
+</div>
+
+
+                            
+                            
+                            
+                            
+                            
+                        </section>
+
+					</div>
+
+                    
+
+<footer id="footer">
+    
+    <section>
+        <form method="post" action="post-action">
+            <div class="field">
+                <label for="name">Name</label>
+                <input type="text" name="name" id="name" />
+            </div>
+            <div class="field">
+                <label for="email">Email</label>
+                <input type="text" name="email" id="email" />
+            </div>
+            <div class="field">
+                <label for="message">Message</label>
+                <textarea name="message" id="message" rows="3"></textarea>
+            </div>
+            <ul class="actions">
+                <li><input type="submit" value='Send A Message' /></li>
+            </ul>
+        </form>
+    </section>
+    
+    <section class="split contact">
+        
+        <section class="alt">
+            <h3>Address</h3>
+            <p>
+                
+                     1234 Somewhere Road #87257
+                
+                     <br/>  Nashville, TN 00000-0000
+                
+            </p>
+        </section>
+        
+        
+        <section>
+            <h3>Phone</h3>
+            <p><a href="tel:%28800%29%20000-0000">(800) 000-0000</a></p>
+        </section>
+        
+        
+        <section>
+            <h3>Email</h3>
+            <p><a href="mailto:someone@untitled.tld">someone@untitled.tld</a></p>
+        </section>
+        
+        
+        <section>
+            <h3>Social</h3>
+            <ul class="icons alt">
+                
+                
+                
+                
+                
+                <li><a href="https://github.com/" class="icon alt fa-github"><span class="label">GitHub</span></a></li>
+                
+                
+                
+                
+                
+            </ul>
+        </section>
+        
+    </section>
+</footer>
+
+                    
+>
+
+
+            </div>
+            
+            
+<script src='/assets/js/jquery.min.js'></script>
+<script src='/assets/js/jquery.scrollex.min.js'></script>
+<script src='/assets/js/jquery.scrolly.min.js'></script>
+<script src='/assets/js/skel.min.js'></script>
+<script src='/assets/js/util.js'></script>
+<script src='/assets/js/main.js'></script>
+
+
+	</body>
+</html>

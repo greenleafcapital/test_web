@@ -1,0 +1,156 @@
+---
+title: "Gold Trade Idea"
+author: 'Team Green'
+date: '2018-08-06'
+slug: GLD
+description: "What's shiny and was used as money?"
+cover: "gold_bar.jpg"
+categories:
+  - gld 
+  - stock
+  - metal
+tags:
+  - gld
+  - stocks
+  - trade
+---
+
+A potential trade idea that we executed today was being long Gold. First lets see how the shiny object has performed since 2010 versus the dollar.
+
+```{r lib, echo=FALSE,warning=FALSE,message=FALSE,include=FALSE}
+
+library(tidyquant)
+library(ggthemes)
+library(dygraphs)
+library(timetk)
+library(knitr)
+library(kableExtra)
+
+```
+
+```{r price data, echo=FALSE,warning=FALSE,message=FALSE,include=FALSE}
+
+tickers <- c("UUP", "GLD")
+
+price_data <- tq_get(tickers,
+                     from = "2009-01-01",
+                     get = "stock.prices")
+
+```
+
+
+```{r gld uup annual ,warning=FALSE,message=FALSE, echo=FALSE}
+
+price_data %>%
+  group_by(symbol) %>%
+  tq_transmute(select = adjusted,
+               mutate_fun = periodReturn,
+               period = "yearly",
+               col_rename = "returns") %>%
+  ungroup() %>%
+  mutate(symbol = if_else(symbol == "GLD", "Gold", "Dollar")) %>%
+  ggplot(aes(x = date, y = returns, fill = symbol)) +
+  geom_bar(stat = 'identity', position = "dodge") +
+  ggtitle("Gold versus Dollar annual performance since 2010") +
+  labs(x = "Date", y = "Annual Returns") +
+  geom_hline(yintercept = 0) +
+  scale_y_continuous(labels = scales::percent) +
+  theme_bw() +
+  scale_fill_discrete(name = "Asset")
+  
+
+```
+
+Its clear from the chart that both assets move in opposite directions (most of the time). After the huge run in price in Gold from 2009 t0 2013, it saw a crash in 2014. Since then its been sideways and range bound trading between \$1300 to $1200.
+
+```{r gld uup cum returns ,warning=FALSE,message=FALSE, echo=FALSE}
+
+price_data %>%
+  group_by(symbol) %>%
+  tq_transmute(select = adjusted,
+               mutate_fun = periodReturn,
+               period = "monthly",
+               col_rename = "returns") %>%
+  mutate(cr = cumprod(1 + returns)) %>%
+  mutate(cum_ret = cr - 1) %>%
+  ungroup() %>%
+  mutate(symbol = if_else(symbol == "GLD", "Gold", "Dollar")) %>%
+  mutate(cum_ret = if_else(date == "2009-01-30", 0, cum_ret)) %>%
+  ggplot(aes(x = date, y = cum_ret, color = symbol)) +
+  geom_line() +
+  ggtitle("Cumulative returns since 2010") +
+  labs(x = "Date", y = "Cumulative Returns %") +
+  scale_y_continuous(labels = scales::percent) +
+  theme_bw() +
+  scale_color_discrete(name = "Asset")
+  
+
+
+```
+
+
+Since April 2018 gold has seen it price go down about 12% and in the same period dollar has rallied about 8%. 
+
+```{r gld uup cum returns 2018, warning=FALSE,message=FALSE, echo=FALSE}
+
+price_data %>%
+  group_by(symbol) %>%
+  filter(date >= "2018-01-01") %>%
+  tq_transmute(select = adjusted,
+               mutate_fun = periodReturn,
+               period = "daily",
+               col_rename = "returns") %>%
+  mutate(cr = cumprod(1 + returns)) %>%
+  mutate(cum_ret = cr - 1) %>%
+  ungroup() %>%
+  mutate(symbol = if_else(symbol == "GLD", "Gold", "Dollar")) %>%
+  mutate(cum_ret = if_else(date == "2009-01-30", 0, cum_ret)) %>%
+  ggplot(aes(x = date, y = cum_ret, color = symbol)) +
+  geom_line() +
+  ggtitle("Cumulative returns since Jan 2018") +
+  labs(x = "Date", y = "Cumulative Returns %") +
+  scale_y_continuous(labels = scales::percent) +
+  theme_bw() +
+  scale_color_discrete(name = "Asset")
+
+```
+
+This move has largely coincided with President Trump's escalations of trade war with Europe and China. Since the escalation the dollar has seen a run up in price, which is opposite of what the president may have intented.
+
+We see this as a good trading opportunity to go long the Gold etf via options. Below you can see the current call options chain.
+
+```{r gld options, warning=FALSE,message=FALSE, echo=FALSE}
+
+gld_options <- getOptionChain("GLD", Exp = "2018-10-19")
+
+gld_call <- gld_options$calls
+gld_call <- tk_tbl(gld_call)
+
+
+
+```
+
+For our trade we are going 
+
+- Long GLD 120 strike call options at $0.65
+- Short GLD 121 strike call options at $0.51
+
+
+```{r gld option trade, warning=FALSE,message=FALSE, echo=FALSE}
+
+
+#none
+
+
+```
+
+Our max loss on the trade is \$0.14 and max profit is $0.86. This trade will expire in 74 days on October 19,2018. We puposefully wanted to give this trade some time to workout. 
+
+We think that GLD has a good chance of bouncing upto $117 in the next few weeks. If that happens we may start seeing some profit on this trade. We will update this post when we make any changes.
+
+
+
+
+
+
+

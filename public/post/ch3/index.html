@@ -1,0 +1,762 @@
+<!DOCTYPE HTML>
+
+<html lang='en'>
+	<head>
+		<title>Chapter 3 &middot; TWIST</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href='/assets/css/main.css' />
+		
+		<noscript><link rel="stylesheet" href='/assets/css/noscript.css' /></noscript>
+	</head>
+
+	<body lang='en' class="is-loading">
+
+		
+			<div id="wrapper">
+
+                
+<header id="header">
+    <a href='/' class="logo">TWIST</a>
+</header>
+
+                
+
+<nav id="nav">
+    <ul class="links">
+        
+	    
+		
+		
+		
+		
+		
+    
+    
+    <li class=""> <a href="/">Home</a></li>
+	
+                
+            
+            
+	
+	
+	
+    
+    <li class=""> <a href="/about/">About</a></li>
+	
+                
+            
+            
+	
+	
+	
+    
+    <li class=""> <a href="/news/">News</a></li>
+	
+                
+            
+            
+	
+	
+	
+    
+    <li class=""> <a href="/ideas/">Ideas &amp; Resources</a></li>
+	
+                
+            
+            
+	
+	
+	
+    
+
+        
+    </ul>
+    
+</nav>
+
+
+
+				
+					<div id="main">
+
+						
+                        <section class="post">
+                            <header class="major">
+                                
+                                <span class="date">January 1, 2018</span>
+                                
+                                <h1>Chapter 3</h1>
+                                <p>Financial Modeling - Chapter 3 Calculating portfolio returns</p>
+                            </header>
+                            
+                            <script src="/rmarkdown-libs/kePrint/kePrint.js"></script>
+
+
+<p>In this chapter we will calculate the portfolio returns. For this purpose we will build a portfolio of ten stocks from the Dow Jones Industrial Average Index and invest equally in each stock.</p>
+<pre class="r"><code>#Loading  libraries
+
+library(FinCal)
+library(tidyquant)
+library(jrvFinance)
+library(ggthemes)
+library(dygraphs)
+library(timetk)
+library(knitr)
+library(kableExtra)
+library(tibbletime)</code></pre>
+<pre class="r"><code>portfolio_tbl &lt;- tribble(~symbol, ~weight,
+                         &quot;AAPL&quot;, 0.1,
+                         &quot;BA&quot;, 0.1,
+                         &quot;NKE&quot;, 0.1,
+                         &quot;MSFT&quot;, 0.1,
+                         &quot;CSCO&quot;, 0.1,
+                         &quot;INTC&quot;, 0.1,
+                         &quot;V&quot;, 0.1,
+                         &quot;UNH&quot;, 0.1,
+                         &quot;CAT&quot;, 0.1,
+                         &quot;HD&quot;, 0.1)
+
+#Formatting the table to look better
+portfolio_tbl %&gt;%
+  mutate(weight = weight * 100) %&gt;%
+  mutate(weight = sprintf(&quot;%.0f%%&quot;,weight)) %&gt;%
+  kable(digits = 1) %&gt;%
+  kable_styling(bootstrap_options = &quot;hover&quot;)</code></pre>
+<table class="table table-hover" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+symbol
+</th>
+<th style="text-align:left;">
+weight
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+AAPL
+</td>
+<td style="text-align:left;">
+10%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+BA
+</td>
+<td style="text-align:left;">
+10%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+NKE
+</td>
+<td style="text-align:left;">
+10%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+MSFT
+</td>
+<td style="text-align:left;">
+10%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+CSCO
+</td>
+<td style="text-align:left;">
+10%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+INTC
+</td>
+<td style="text-align:left;">
+10%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+V
+</td>
+<td style="text-align:left;">
+10%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+UNH
+</td>
+<td style="text-align:left;">
+10%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+CAT
+</td>
+<td style="text-align:left;">
+10%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+HD
+</td>
+<td style="text-align:left;">
+10%
+</td>
+</tr>
+</tbody>
+</table>
+<p>First we will start downloading the price data for the above stocks.</p>
+<pre class="r"><code>price_data &lt;- tq_get(portfolio_tbl,
+                     from = &quot;2014-01-01&quot;,
+                     get = &quot;stock.prices&quot;)
+
+price_returns &lt;- price_data %&gt;%
+  group_by(symbol) %&gt;%
+  tq_transmute(select = adjusted,
+               mutate_fun = periodReturn,
+               period = &quot;monthly&quot;,
+               col_rename = &quot;returns&quot;)</code></pre>
+<p>After downloading the price data we will calculate the portfolio returns.</p>
+<pre class="r"><code># Calculating portfolio returns
+
+portfolio_returns &lt;- price_returns %&gt;%
+  tq_portfolio(assets_col = symbol,
+               returns_col = returns,
+               weights = portfolio_tbl,
+               col_rename = &quot;portfolio_returns&quot;)</code></pre>
+<p>We will plot the monthly portfolio returns.</p>
+<pre class="r"><code>portfolio_returns %&gt;%
+  ggplot(aes(x = date, y = portfolio_returns)) +
+  geom_bar(stat = &quot;identity&quot;, fill = &quot;light blue&quot;) +
+  geom_hline(yintercept = 0) +
+  scale_y_continuous(breaks = seq(-0.2,0.15,0.03),
+                     labels = scales::percent) +
+  theme_classic() +
+  ggtitle(&quot;Portfolio Returns Since 2014&quot;) +
+  labs(x = &quot;Date&quot;, y = &quot;Portfolio Returns&quot;) +
+  scale_x_date(date_breaks = &quot;1 years&quot;, date_labels = &quot;%Y&quot;)</code></pre>
+<p><img src="/post/Ch3_files/figure-html/calculating%20portfolio%20return%20plot-1.png" width="672" /></p>
+<p>Calculating the cumulative returns for the portfolio</p>
+<pre class="r"><code>portfolio_returns %&gt;%
+  add_row(date = &quot;2013-12-31&quot;, portfolio_returns = 0, .before = 1) %&gt;%
+  mutate(cr = cumprod(1 + portfolio_returns)) %&gt;%
+  mutate(cumulative_returns = cr - 1) %&gt;%
+  ggplot(aes(x = date, y = cumulative_returns)) +
+  geom_line() +
+  geom_hline(yintercept = 0) +
+  theme_classic() +
+  ggtitle(&quot;Cumulative Portfolio Returns Since 2014&quot;) +
+  labs(x = &quot;Date&quot;, y = &quot;Portfolio Returns&quot;) +
+  scale_y_continuous(labels = scales::percent)</code></pre>
+<p><img src="/post/Ch3_files/figure-html/cum%20calculating%20portfolio%20return%20plot-1.png" width="672" /></p>
+<p>Lets compare this portfolio wil the Index returns. We will use the ticker DIA which is the dow jones etf.</p>
+<pre class="r"><code>dia &lt;- tq_get(&quot;DIA&quot;,
+              from = &quot;2014-01-01&quot;,
+              get = &quot;stock.prices&quot;)
+
+dia_returns &lt;- dia %&gt;%
+  tq_transmute(select = adjusted,
+               mutate_fun = periodReturn,
+               period = &quot;monthly&quot;,
+               col_rename = &quot;dia_returns&quot;)
+  
+# We will now combine the Index returns with the Portfolio returns
+
+combined_returns &lt;- left_join(portfolio_returns, dia_returns, by = &quot;date&quot;)</code></pre>
+<p>After downloding the index price and calculating the returns, we are ready to plot the results</p>
+<pre class="r"><code># Plotting portfolio returns and Dow Jones
+
+combined_returns %&gt;% 
+  gather(portfolio_returns, dia_returns, key = name, value = returns) %&gt;%
+  ggplot(aes(x = date, y = returns, fill = name)) +
+  geom_bar(stat = &quot;identity&quot;, position = &quot;dodge&quot;) +
+  scale_y_continuous(breaks = seq(-0.12,0.2,0.03),
+                     labels = scales::percent) +
+  theme_classic() +
+  geom_hline(yintercept = 0) +
+  labs(x = &quot;Date&quot;, y = &quot;Returns&quot;) +
+  ggtitle(&quot;Portfolio vs Dow Jones monthly returns since 2014&quot;) +
+  scale_fill_discrete(name = &quot;&quot;,
+                      labels = c(&quot;Dow Jones&quot;, &quot;Portfolio&quot;))</code></pre>
+<p><img src="/post/Ch3_files/figure-html/combined%20results-1.png" width="672" /></p>
+<p>Comparing the cumulative portfolio returns and Dow Jones returns</p>
+<pre class="r"><code>combined_returns %&gt;%
+  add_row(date = &quot;2013-12-31&quot;, portfolio_returns = 0, dia_returns = 0, .before = 1) %&gt;%
+  gather(portfolio_returns, dia_returns, key = name, value = returns) %&gt;%
+  group_by(name) %&gt;%
+  mutate(cr = cumprod(1 + returns)) %&gt;%
+  mutate(cumulative_returns = cr - 1) %&gt;%
+  ggplot(aes(x = date, y = cumulative_returns, color = name)) +
+  geom_line() +
+  theme_classic() +
+  geom_hline(yintercept = 0) +
+  labs(x = &quot;Date&quot;, y = &quot;Cumulative Returns&quot;) +
+  ggtitle(&quot;Portfolio vs Dow Jones cumulative monthly returns since 2014&quot;) +
+  scale_color_discrete(name = &quot;&quot;,
+                      labels = c(&quot;Dow Jones&quot;, &quot;Portfolio&quot;)) +
+  scale_y_continuous(labels = scales::percent)</code></pre>
+<p><img src="/post/Ch3_files/figure-html/cumulative%20combined%20results-1.png" width="672" /></p>
+<pre class="r"><code>combined_returns_xts &lt;- tk_xts(combined_returns)
+
+annualised_returns &lt;- table.AnnualizedReturns(combined_returns_xts)
+
+calendar_returns &lt;- table.CalendarReturns(combined_returns_xts)
+
+annualised_returns %&gt;%
+  rename(Portfolio = portfolio_returns,
+         `Dow Jones` = dia_returns) %&gt;%
+  kable()</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+Portfolio
+</th>
+<th style="text-align:right;">
+Dow Jones
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Annualized Return
+</td>
+<td style="text-align:right;">
+0.2349
+</td>
+<td style="text-align:right;">
+0.1233
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Annualized Std Dev
+</td>
+<td style="text-align:right;">
+0.1166
+</td>
+<td style="text-align:right;">
+0.1047
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Annualized Sharpe (Rf=0%)
+</td>
+<td style="text-align:right;">
+2.0151
+</td>
+<td style="text-align:right;">
+1.1779
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>calendar_returns %&gt;%
+  rename(Portfolio = portfolio_returns,
+         `Dow Jones` = dia_returns) %&gt;%
+  kable(caption = &quot;\nMonthly \nreturns for the Index and the Portfolio&quot;) %&gt;%
+  kable_styling(bootstrap_options = &quot;hover&quot;)</code></pre>
+<table class="table table-hover" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-1">Table 1: </span> Monthly returns for the Index and the Portfolio
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+Jan
+</th>
+<th style="text-align:right;">
+Feb
+</th>
+<th style="text-align:right;">
+Mar
+</th>
+<th style="text-align:right;">
+Apr
+</th>
+<th style="text-align:right;">
+May
+</th>
+<th style="text-align:right;">
+Jun
+</th>
+<th style="text-align:right;">
+Jul
+</th>
+<th style="text-align:right;">
+Aug
+</th>
+<th style="text-align:right;">
+Sep
+</th>
+<th style="text-align:right;">
+Oct
+</th>
+<th style="text-align:right;">
+Nov
+</th>
+<th style="text-align:right;">
+Dec
+</th>
+<th style="text-align:right;">
+Portfolio
+</th>
+<th style="text-align:right;">
+Dow Jones
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+2014
+</td>
+<td style="text-align:right;">
+-3.4
+</td>
+<td style="text-align:right;">
+4.6
+</td>
+<td style="text-align:right;">
+1.0
+</td>
+<td style="text-align:right;">
+1.0
+</td>
+<td style="text-align:right;">
+4.5
+</td>
+<td style="text-align:right;">
+2.4
+</td>
+<td style="text-align:right;">
+0.7
+</td>
+<td style="text-align:right;">
+5.7
+</td>
+<td style="text-align:right;">
+0.3
+</td>
+<td style="text-align:right;">
+3.7
+</td>
+<td style="text-align:right;">
+6.4
+</td>
+<td style="text-align:right;">
+-1.7
+</td>
+<td style="text-align:right;">
+27.6
+</td>
+<td style="text-align:right;">
+10.7
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2015
+</td>
+<td style="text-align:right;">
+-2.3
+</td>
+<td style="text-align:right;">
+7.2
+</td>
+<td style="text-align:right;">
+-2.2
+</td>
+<td style="text-align:right;">
+1.5
+</td>
+<td style="text-align:right;">
+2.9
+</td>
+<td style="text-align:right;">
+-2.4
+</td>
+<td style="text-align:right;">
+2.3
+</td>
+<td style="text-align:right;">
+-4.8
+</td>
+<td style="text-align:right;">
+0.6
+</td>
+<td style="text-align:right;">
+9.7
+</td>
+<td style="text-align:right;">
+0.8
+</td>
+<td style="text-align:right;">
+-2.0
+</td>
+<td style="text-align:right;">
+11.0
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2016
+</td>
+<td style="text-align:right;">
+-5.9
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+7.9
+</td>
+<td style="text-align:right;">
+-2.9
+</td>
+<td style="text-align:right;">
+1.2
+</td>
+<td style="text-align:right;">
+-0.3
+</td>
+<td style="text-align:right;">
+6.0
+</td>
+<td style="text-align:right;">
+0.7
+</td>
+<td style="text-align:right;">
+1.3
+</td>
+<td style="text-align:right;">
+-1.3
+</td>
+<td style="text-align:right;">
+2.9
+</td>
+<td style="text-align:right;">
+2.2
+</td>
+<td style="text-align:right;">
+11.7
+</td>
+<td style="text-align:right;">
+16.4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2017
+</td>
+<td style="text-align:right;">
+3.4
+</td>
+<td style="text-align:right;">
+5.5
+</td>
+<td style="text-align:right;">
+0.3
+</td>
+<td style="text-align:right;">
+3.5
+</td>
+<td style="text-align:right;">
+0.8
+</td>
+<td style="text-align:right;">
+0.8
+</td>
+<td style="text-align:right;">
+4.9
+</td>
+<td style="text-align:right;">
+2.1
+</td>
+<td style="text-align:right;">
+2.1
+</td>
+<td style="text-align:right;">
+7.2
+</td>
+<td style="text-align:right;">
+5.3
+</td>
+<td style="text-align:right;">
+2.6
+</td>
+<td style="text-align:right;">
+46.0
+</td>
+<td style="text-align:right;">
+28.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2018
+</td>
+<td style="text-align:right;">
+7.9
+</td>
+<td style="text-align:right;">
+-0.4
+</td>
+<td style="text-align:right;">
+-3.5
+</td>
+<td style="text-align:right;">
+3.0
+</td>
+<td style="text-align:right;">
+4.6
+</td>
+<td style="text-align:right;">
+-0.7
+</td>
+<td style="text-align:right;">
+2.5
+</td>
+<td style="text-align:right;">
+1.8
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+16.0
+</td>
+<td style="text-align:right;">
+4.2
+</td>
+</tr>
+</tbody>
+</table>
+
+
+                            
+                            
+                            
+                            
+                            
+                        </section>
+
+					</div>
+
+                    
+
+<footer id="footer">
+    
+    <section>
+        <form method="post" action="post-action">
+            <div class="field">
+                <label for="name">Name</label>
+                <input type="text" name="name" id="name" />
+            </div>
+            <div class="field">
+                <label for="email">Email</label>
+                <input type="text" name="email" id="email" />
+            </div>
+            <div class="field">
+                <label for="message">Message</label>
+                <textarea name="message" id="message" rows="3"></textarea>
+            </div>
+            <ul class="actions">
+                <li><input type="submit" value='Send A Message' /></li>
+            </ul>
+        </form>
+    </section>
+    
+    <section class="split contact">
+        
+        <section class="alt">
+            <h3>Address</h3>
+            <p>
+                
+                     1234 Somewhere Road #87257
+                
+                     <br/>  Nashville, TN 00000-0000
+                
+            </p>
+        </section>
+        
+        
+        <section>
+            <h3>Phone</h3>
+            <p><a href="tel:%28800%29%20000-0000">(800) 000-0000</a></p>
+        </section>
+        
+        
+        <section>
+            <h3>Email</h3>
+            <p><a href="mailto:someone@untitled.tld">someone@untitled.tld</a></p>
+        </section>
+        
+        
+        <section>
+            <h3>Social</h3>
+            <ul class="icons alt">
+                
+                
+                
+                
+                
+                <li><a href="https://github.com/" class="icon alt fa-github"><span class="label">GitHub</span></a></li>
+                
+                
+                
+                
+                
+            </ul>
+        </section>
+        
+    </section>
+</footer>
+
+                    
+>
+
+
+            </div>
+            
+            
+<script src='/assets/js/jquery.min.js'></script>
+<script src='/assets/js/jquery.scrollex.min.js'></script>
+<script src='/assets/js/jquery.scrolly.min.js'></script>
+<script src='/assets/js/skel.min.js'></script>
+<script src='/assets/js/util.js'></script>
+<script src='/assets/js/main.js'></script>
+
+
+	</body>
+</html>

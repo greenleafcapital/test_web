@@ -1,0 +1,213 @@
+---
+title: "Chapter 3"
+output: html_document
+date: "2018-01-01"
+author: "Team Green"
+cover: "/three.jpg" 
+description: "Financial Modeling - Chapter 3 Calculating portfolio returns"
+categories:
+  - Financial Modeling
+  - Tutorial
+tags:
+  - Financial Modeling
+---
+
+In this chapter we will calculate the portfolio returns. For this purpose we will build a portfolio of ten stocks from the Dow Jones Industrial Average Index and invest equally in each stock.
+
+```{r lib, warning=FALSE,message=FALSE}
+
+#Loading  libraries
+
+library(FinCal)
+library(tidyquant)
+library(jrvFinance)
+library(ggthemes)
+library(dygraphs)
+library(timetk)
+library(knitr)
+library(kableExtra)
+library(tibbletime)
+
+```
+
+```{r stock tbl, warning=FALSE,message=FALSE}
+
+portfolio_tbl <- tribble(~symbol, ~weight,
+                         "AAPL", 0.1,
+                         "BA", 0.1,
+                         "NKE", 0.1,
+                         "MSFT", 0.1,
+                         "CSCO", 0.1,
+                         "INTC", 0.1,
+                         "V", 0.1,
+                         "UNH", 0.1,
+                         "CAT", 0.1,
+                         "HD", 0.1)
+
+#Formatting the table to look better
+portfolio_tbl %>%
+  mutate(weight = weight * 100) %>%
+  mutate(weight = sprintf("%.0f%%",weight)) %>%
+  kable(digits = 1) %>%
+  kable_styling(bootstrap_options = "hover")
+```
+
+First we will start downloading the price data for the above stocks. 
+
+```{r price data, warning=FALSE,message=FALSE}
+
+price_data <- tq_get(portfolio_tbl,
+                     from = "2014-01-01",
+                     get = "stock.prices")
+
+price_returns <- price_data %>%
+  group_by(symbol) %>%
+  tq_transmute(select = adjusted,
+               mutate_fun = periodReturn,
+               period = "monthly",
+               col_rename = "returns")
+
+```
+
+After downloading the price data we will calculate the portfolio returns.
+
+```{r calculating portfolio return, warning=FALSE,message=FALSE}
+
+# Calculating portfolio returns
+
+portfolio_returns <- price_returns %>%
+  tq_portfolio(assets_col = symbol,
+               returns_col = returns,
+               weights = portfolio_tbl,
+               col_rename = "portfolio_returns")
+
+```
+
+We will plot the monthly portfolio returns.
+
+```{r calculating portfolio return plot, warning=FALSE,message=FALSE}
+
+portfolio_returns %>%
+  ggplot(aes(x = date, y = portfolio_returns)) +
+  geom_bar(stat = "identity", fill = "light blue") +
+  geom_hline(yintercept = 0) +
+  scale_y_continuous(breaks = seq(-0.2,0.15,0.03),
+                     labels = scales::percent) +
+  theme_classic() +
+  ggtitle("Portfolio Returns Since 2014") +
+  labs(x = "Date", y = "Portfolio Returns") +
+  scale_x_date(date_breaks = "1 years", date_labels = "%Y")
+
+
+```
+
+Calculating the cumulative returns for the portfolio
+
+```{r cum calculating portfolio return plot, warning=FALSE,message=FALSE}
+
+portfolio_returns %>%
+  add_row(date = "2013-12-31", portfolio_returns = 0, .before = 1) %>%
+  mutate(cr = cumprod(1 + portfolio_returns)) %>%
+  mutate(cumulative_returns = cr - 1) %>%
+  ggplot(aes(x = date, y = cumulative_returns)) +
+  geom_line() +
+  geom_hline(yintercept = 0) +
+  theme_classic() +
+  ggtitle("Cumulative Portfolio Returns Since 2014") +
+  labs(x = "Date", y = "Portfolio Returns") +
+  scale_y_continuous(labels = scales::percent)
+
+
+```
+
+Lets compare this portfolio wil the Index returns. We will use the ticker DIA which is the dow jones etf.
+
+```{r DIA price, warning=FALSE,message=FALSE}
+
+dia <- tq_get("DIA",
+              from = "2014-01-01",
+              get = "stock.prices")
+
+dia_returns <- dia %>%
+  tq_transmute(select = adjusted,
+               mutate_fun = periodReturn,
+               period = "monthly",
+               col_rename = "dia_returns")
+  
+# We will now combine the Index returns with the Portfolio returns
+
+combined_returns <- left_join(portfolio_returns, dia_returns, by = "date")
+
+```
+
+After downloding the index price and calculating the returns, we are ready to plot the results
+
+```{r combined results, warning=FALSE,message=FALSE}
+
+# Plotting portfolio returns and Dow Jones
+
+combined_returns %>% 
+  gather(portfolio_returns, dia_returns, key = name, value = returns) %>%
+  ggplot(aes(x = date, y = returns, fill = name)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_y_continuous(breaks = seq(-0.12,0.2,0.03),
+                     labels = scales::percent) +
+  theme_classic() +
+  geom_hline(yintercept = 0) +
+  labs(x = "Date", y = "Returns") +
+  ggtitle("Portfolio vs Dow Jones monthly returns since 2014") +
+  scale_fill_discrete(name = "",
+                      labels = c("Dow Jones", "Portfolio"))
+
+```
+
+Comparing the cumulative portfolio returns and Dow Jones returns
+
+
+```{r cumulative combined results, warning=FALSE,message=FALSE}
+
+combined_returns %>%
+  add_row(date = "2013-12-31", portfolio_returns = 0, dia_returns = 0, .before = 1) %>%
+  gather(portfolio_returns, dia_returns, key = name, value = returns) %>%
+  group_by(name) %>%
+  mutate(cr = cumprod(1 + returns)) %>%
+  mutate(cumulative_returns = cr - 1) %>%
+  ggplot(aes(x = date, y = cumulative_returns, color = name)) +
+  geom_line() +
+  theme_classic() +
+  geom_hline(yintercept = 0) +
+  labs(x = "Date", y = "Cumulative Returns") +
+  ggtitle("Portfolio vs Dow Jones cumulative monthly returns since 2014") +
+  scale_color_discrete(name = "",
+                      labels = c("Dow Jones", "Portfolio")) +
+  scale_y_continuous(labels = scales::percent)
+   
+
+```
+
+
+```{r portfolio statistics, warning=FALSE,message=FALSE}
+
+combined_returns_xts <- tk_xts(combined_returns)
+
+annualised_returns <- table.AnnualizedReturns(combined_returns_xts)
+
+calendar_returns <- table.CalendarReturns(combined_returns_xts)
+
+annualised_returns %>%
+  rename(Portfolio = portfolio_returns,
+         `Dow Jones` = dia_returns) %>%
+  kable()
+  
+```
+
+
+```{r}
+
+calendar_returns %>%
+  rename(Portfolio = portfolio_returns,
+         `Dow Jones` = dia_returns) %>%
+  kable(caption = "\nMonthly \nreturns for the Index and the Portfolio") %>%
+  kable_styling(bootstrap_options = "hover")
+```
+

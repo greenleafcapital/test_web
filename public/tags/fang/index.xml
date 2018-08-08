@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Fang on Long Short</title>
+    <link>/tags/fang/</link>
+    <description>Recent content in Fang on Long Short</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 27 Jul 2018 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/fang/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>FANG Stocks</title>
+      <link>/post/fang/</link>
+      <pubDate>Fri, 27 Jul 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/fang/</guid>
+      <description>FAANG stock performance since July 1, 2018
+With Netflix and Facebook both suffering major losses, all eyes will be on Apple as it races to be the first company with a $1 Trillion valuation.
+How have the FAANG stocks performed YTD
+Netflix and Amazon have clearly dominated the large cap stocks. This has been a terrible year of performance for managers who make a living by shorting “bubble basket stocks”.</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Metal on Long Short</title>
+    <link>/categories/metal/</link>
+    <description>Recent content in Metal on Long Short</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 06 Aug 2018 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/categories/metal/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Gold Trade Idea</title>
+      <link>/post/gld/</link>
+      <pubDate>Mon, 06 Aug 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/gld/</guid>
+      <description>A potential trade idea that we executed today was being long Gold. First lets see how the shiny object has performed since 2010 versus the dollar.
+Its clear from the chart that both assets move in opposite directions (most of the time). After the huge run in price in Gold from 2009 t0 2013, it saw a crash in 2014. Since then its been sideways and range bound trading between $1300 to $1200.</description>
+    </item>
+    
+  </channel>
+</rss>

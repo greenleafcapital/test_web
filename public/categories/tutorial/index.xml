@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tutorial on TWIST</title>
+    <link>/categories/tutorial/</link>
+    <description>Recent content in Tutorial on TWIST</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 01 Jan 2018 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/categories/tutorial/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Chapter 1</title>
+      <link>/post/ch1/</link>
+      <pubDate>Mon, 01 Jan 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/ch1/</guid>
+      <description>Financial Modeling Chapter 1 Calculating the present value of with equal payments
+library(FinCal) library(tidyquant) library(jrvFinance) library(ggthemes) library(dygraphs) library(timetk) library(knitr) library(kableExtra) r &amp;lt;- 0.1 cf &amp;lt;- tribble(~Year,~cf, 1,100, 2,100, 3,100, 4,100, 5,100) cf %&amp;gt;% mutate(pv = cf/(1+r)^Year) %&amp;gt;% .[[3]] %&amp;gt;% sum() ## [1] 379.0787 Calculating the present value of uneven payments.
+cf &amp;lt;- tribble(~Year,~cf, 1,100, 2,200, 3,300, 4,400, 5,500) cf %&amp;gt;% mutate(pv = cf/(1+r)^Year) %&amp;gt;% .[[3]] %&amp;gt;% sum() ## [1] 1065.259 Calculating the PV with negative cash flow</description>
+    </item>
+    
+    <item>
+      <title>Chapter 2</title>
+      <link>/about/</link>
+      <pubDate>Mon, 01 Jan 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/about/</guid>
+      <description>Financial Modeling Calculating returns of Individual securities #Loading the package library(FinCal) library(tidyquant) library(jrvFinance) library(ggthemes) library(dygraphs) library(timetk) library(knitr) library(kableExtra) library(tibbletime) In this chapter we will try and calculate the returns of individual stocks. We will calculate returns for the FAANG stocks.
+First we will calculate returns for single stock -&amp;gt; Netflix
+# We will use the Tidyquant package netflix &amp;lt;- tq_get(&amp;quot;NFLX&amp;quot;, from = &amp;#39;2010-01-01&amp;#39;, get = &amp;quot;stock.prices&amp;quot;) netflix ## # A tibble: 2,164 x 7 ## date open high low close volume adjusted ## &amp;lt;date&amp;gt; &amp;lt;dbl&amp;gt; &amp;lt;dbl&amp;gt; &amp;lt;dbl&amp;gt; &amp;lt;dbl&amp;gt; &amp;lt;dbl&amp;gt; &amp;lt;dbl&amp;gt; ## 1 2010-01-04 7.</description>
+    </item>
+    
+    <item>
+      <title>Chapter 2</title>
+      <link>/post/ch2/</link>
+      <pubDate>Mon, 01 Jan 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/ch2/</guid>
+      <description>Financial Modeling Calculating returns of Individual securities #Loading the package library(FinCal) library(tidyquant) library(jrvFinance) library(ggthemes) library(dygraphs) library(timetk) library(knitr) library(kableExtra) library(tibbletime) In this chapter we will try and calculate the returns of individual stocks. We will calculate returns for the FAANG stocks.
+First we will calculate returns for single stock -&amp;gt; Netflix
+# We will use the Tidyquant package netflix &amp;lt;- tq_get(&amp;quot;NFLX&amp;quot;, from = &amp;#39;2010-01-01&amp;#39;, get = &amp;quot;stock.prices&amp;quot;) netflix ## # A tibble: 2,163 x 7 ## date open high low close volume adjusted ## &amp;lt;date&amp;gt; &amp;lt;dbl&amp;gt; &amp;lt;dbl&amp;gt; &amp;lt;dbl&amp;gt; &amp;lt;dbl&amp;gt; &amp;lt;dbl&amp;gt; &amp;lt;dbl&amp;gt; ## 1 2010-01-04 7.</description>
+    </item>
+    
+    <item>
+      <title>Chapter 3</title>
+      <link>/post/ch3/</link>
+      <pubDate>Mon, 01 Jan 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/ch3/</guid>
+      <description>In this chapter we will calculate the portfolio returns. For this purpose we will build a portfolio of ten stocks from the Dow Jones Industrial Average Index and invest equally in each stock.
+#Loading libraries library(FinCal) library(tidyquant) library(jrvFinance) library(ggthemes) library(dygraphs) library(timetk) library(knitr) library(kableExtra) library(tibbletime) portfolio_tbl &amp;lt;- tribble(~symbol, ~weight, &amp;quot;AAPL&amp;quot;, 0.1, &amp;quot;BA&amp;quot;, 0.1, &amp;quot;NKE&amp;quot;, 0.1, &amp;quot;MSFT&amp;quot;, 0.1, &amp;quot;CSCO&amp;quot;, 0.1, &amp;quot;INTC&amp;quot;, 0.1, &amp;quot;V&amp;quot;, 0.1, &amp;quot;UNH&amp;quot;, 0.1, &amp;quot;CAT&amp;quot;, 0.1, &amp;quot;HD&amp;quot;, 0.1) #Formatting the table to look better portfolio_tbl %&amp;gt;% mutate(weight = weight * 100) %&amp;gt;% mutate(weight = sprintf(&amp;quot;%.</description>
+    </item>
+    
+    <item>
+      <title>Chapter 4</title>
+      <link>/post/ch4/</link>
+      <pubDate>Mon, 01 Jan 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/ch4/</guid>
+      <description>Chapter 4 library(tidyquant) library(ggthemes) library(timetk) library(tibbletime) library(rvest) library(knitr) library(kableExtra) In this chapter we will use the Fama French 3 factors data file to calculate the long term stocks and risk free returns. We will also produce a portfolio and compare the risk and returns with the 3 factors model.
+The Fama French 3 factors model was downloaded from the following link
+First we will begin by loading the data directly from the website into R.</description>
+    </item>
+    
+    <item>
+      <title>Chapter 5</title>
+      <link>/post/ch5/</link>
+      <pubDate>Mon, 01 Jan 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/ch5/</guid>
+      <description>In this chapter we will discover ways to download economic data directly from FRED (Federal Reserve Economic data) into R.
+We will download :
+ Federal Funds Rate 10 Year Treasury yield 30 year fixed average mortgage rate for US Civilian Unemployment rate Housing Price Index Real Estate Investment Trust Index (REIT)  After that we will download and plot the interest rates for different maturities. We will visualize the shape of the yield curve and credit spread.</description>
+    </item>
+    
+    <item>
+      <title>Chapter 7</title>
+      <link>/post/ch7/</link>
+      <pubDate>Mon, 01 Jan 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/ch7/</guid>
+      <description>Mean Variance Optimization In this chapter we will use mean and variance of different portfolio to choose the portfolios that offer that offer the highest returns for a given level of risk.
+We will construct a diversified portfolio of different assets such as bonds, stocks commodities etc.
+library(PortfolioAnalytics) library(tidyquant) library(ggthemes) library(tseries) library(timetk) We will choose the following assets for building our portfolio.
+ SPY for S&amp;amp;P 500 Index VEU for International equities IJS for small cap stocks EEM for emerging market stocks AGG for aggregate bonds GLD for Gold TLT for long government bonds  tickers &amp;lt;- c(&amp;quot;SPY&amp;quot;, &amp;quot;VEU&amp;quot;, &amp;quot;IJS&amp;quot;, &amp;quot;EEM&amp;quot;, &amp;quot;AGG&amp;quot;, &amp;quot;GLD&amp;quot;, &amp;quot;TLT&amp;quot;) #Download price data price_data &amp;lt;- tq_get(tickers, from = &amp;quot;2011-01-01&amp;quot;) #Calculate returns and spread into an xts object returns &amp;lt;- price_data %&amp;gt;% group_by(symbol) %&amp;gt;% tq_transmute(select = adjusted, mutate_fun = periodReturn, period = &amp;quot;monthly&amp;quot;, col_rename = &amp;quot;returns&amp;quot;) %&amp;gt;% spread(symbol, value = returns) %&amp;gt;% tk_xts() After calculating the monthly returns we will use the tseries package to calculate the optimal portfolio weights for our objectives and constraints.</description>
+    </item>
+    
+    <item>
+      <title>Chapter 8</title>
+      <link>/post/ch8/</link>
+      <pubDate>Mon, 01 Jan 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/ch8/</guid>
+      <description>Financial Modeling Portfolio Modeling library(FinCal) library(tidyquant) library(jrvFinance) library(ggthemes) library(dygraphs) library(timetk) library(knitr) library(kableExtra) library(tibbletime) Calculating the mean, variance and the standard deviation(monthly and yearly time period)
+tickers &amp;lt;- c(&amp;quot;AAPL&amp;quot;, &amp;quot;GOOG&amp;quot;) price_data &amp;lt;- tq_get(tickers, from = &amp;#39;2007-06-01&amp;#39;, to = &amp;quot;2012-06-01&amp;quot;, get = &amp;quot;stock.prices&amp;quot;) monthly_mean &amp;lt;- price_data %&amp;gt;% group_by(symbol) %&amp;gt;% as_tbl_time(date) %&amp;gt;% as_period(period = &amp;quot;monthly&amp;quot;, side = &amp;#39;end&amp;#39;) %&amp;gt;% select(symbol, date, adjusted) %&amp;gt;% tq_transmute(select = adjusted, mutate_fun = periodReturn, period = &amp;#39;monthly&amp;#39;, col_rename = &amp;quot;returns&amp;quot;) %&amp;gt;% summarise(monthly_mean = mean(returns)) monthly_variance &amp;lt;- price_data %&amp;gt;% group_by(symbol) %&amp;gt;% as_tbl_time(date) %&amp;gt;% as_period(period = &amp;quot;monthly&amp;quot;, side = &amp;#39;end&amp;#39;) %&amp;gt;% select(symbol, date, adjusted) %&amp;gt;% tq_transmute(select = adjusted, mutate_fun = periodReturn, period = &amp;#39;monthly&amp;#39;, col_rename = &amp;quot;returns&amp;quot;) %&amp;gt;% summarise(monthly_variance = var(returns)) monthly_sd &amp;lt;- price_data %&amp;gt;% group_by(symbol) %&amp;gt;% as_tbl_time(date) %&amp;gt;% as_period(period = &amp;quot;monthly&amp;quot;, side = &amp;#39;end&amp;#39;) %&amp;gt;% select(symbol, date, adjusted) %&amp;gt;% tq_transmute(select = adjusted, mutate_fun = periodReturn, period = &amp;#39;monthly&amp;#39;, col_rename = &amp;quot;returns&amp;quot;) %&amp;gt;% summarise(monthly_sd = sd(returns)) yearly_mean &amp;lt;- price_data %&amp;gt;% group_by(symbol) %&amp;gt;% as_tbl_time(date) %&amp;gt;% as_period(period = &amp;quot;yearly&amp;quot;, side = &amp;#39;end&amp;#39;) %&amp;gt;% select(symbol, date, adjusted) %&amp;gt;% tq_transmute(select = adjusted, mutate_fun = periodReturn, period = &amp;#39;yearly&amp;#39;, col_rename = &amp;quot;returns&amp;quot;) %&amp;gt;% summarise(yearly_mean = mean(returns)) yearly_variance &amp;lt;- price_data %&amp;gt;% group_by(symbol) %&amp;gt;% as_tbl_time(date) %&amp;gt;% as_period(period = &amp;quot;yearly&amp;quot;, side = &amp;#39;end&amp;#39;) %&amp;gt;% select(symbol, date, adjusted) %&amp;gt;% tq_transmute(select = adjusted, mutate_fun = periodReturn, period = &amp;#39;yearly&amp;#39;, col_rename = &amp;quot;returns&amp;quot;) %&amp;gt;% summarise(yearly_variance = var(returns)) yearly_sd &amp;lt;- price_data %&amp;gt;% group_by(symbol) %&amp;gt;% as_tbl_time(date) %&amp;gt;% as_period(period = &amp;quot;yearly&amp;quot;, side = &amp;#39;end&amp;#39;) %&amp;gt;% select(symbol, date, adjusted) %&amp;gt;% tq_transmute(select = adjusted, mutate_fun = periodReturn, period = &amp;#39;yearly&amp;#39;, col_rename = &amp;quot;returns&amp;quot;) %&amp;gt;% summarise(yearly_sd = sd(returns)) left_join(yearly_mean, yearly_sd, by = &amp;#39;symbol&amp;#39;) %&amp;gt;% left_join(yearly_variance) %&amp;gt;% left_join(monthly_mean) %&amp;gt;% left_join(monthly_sd) %&amp;gt;% left_join(monthly_variance) ## # A tibble: 2 x 7 ## symbol yearly_mean yearly_sd yearly_variance monthly_mean monthly_sd ## &amp;lt;chr&amp;gt; &amp;lt;dbl&amp;gt; &amp;lt;dbl&amp;gt; &amp;lt;dbl&amp;gt; &amp;lt;dbl&amp;gt; &amp;lt;dbl&amp;gt; ## 1 AAPL 0.</description>
+    </item>
+    
+  </channel>
+</rss>

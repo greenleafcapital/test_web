@@ -1,0 +1,108 @@
+---
+title: "Facebook disappoints! Stock down 20%"
+output: html_document
+author: "Team Green"
+date: "2018-07-26"
+cover: "fb_phone.jpg"
+slug: facebook-idea
+categories:
+  - Trades
+  - Ideas
+tags:
+  - trade
+  - facebook
+  - stocks
+description: "Is this the worst decline for Facebook? How can we profit from this?"
+---
+
+Yesterday Facebook reported their earnings after market hours and investors were not pleased. They sent the stock down almost 25% at one point. Right now the stock is down about 20%. We wanted to check if this was the worst performance for Facebook stock since the IPO
+
+```{r lib, echo=FALSE, include=FALSE, message=FALSE, warning=FALSE}
+library(tidyquant)
+library(timetk)
+library(knitr)
+library(kableExtra)
+```
+
+```{r fb_daily returns, echo=FALSE, include=FALSE, message=FALSE, warning=FALSE}
+fb_price <- tq_get("FB",
+                   from = '2007-01-01',
+                   get = 'stock.prices')
+
+fb_ret <- fb_price %>%
+  tq_transmute(select = adjusted,
+               mutate_fun = periodReturn,
+               period = 'daily',
+               col_rename = 'returns')
+
+fb_daily <- fb_ret %>%
+  add_row(date = '2018-07-26', returns = -0.2) %>%
+  ggplot(aes(x = date, y = returns)) +
+  geom_line() +
+  ggtitle("Daily returns for FB since the IPO") +
+  labs(x = "Date", y = "Returns") +
+  scale_y_continuous(labels = scales::percent,
+                     breaks = seq(-0.5,0.5,0.05)) +
+  theme_classic()
+
+fb_5_day <- fb_price %>%
+  select(date, adjusted) %>%
+  add_row(date = '2018-07-26', adjusted = 175.40) %>%
+  tq_transmute(select = adjusted,
+               mutate_fun = ROC,
+               n = 5,
+               col_rename = 'roll_5') %>%
+  ggplot(aes(x = date, y = roll_5)) +
+  geom_line() +
+  ggtitle("5 day rolling returns Facebook") +
+  labs(x = "Date", y = "Returns") +
+  scale_y_continuous(labels = scales::percent,
+                     breaks = seq(-0.5,0.5,0.05)) +
+  theme_classic()
+
+
+```
+
+
+```{r daily charts, echo=FALSE,message=FALSE, warning=FALSE}
+fb_daily
+```
+
+This is the worst one day performance for Facebook since its IPO. After its IPO Facebook stock was under heavy pressure and it continued to slide down for several days.
+
+Lets see how it has performed on a 5 day rolling window.
+
+```{r 5 day, echo=FALSE,message=FALSE, warning=FALSE}
+fb_5_day
+```
+
+As we can see there has been worse 5 day performance for Facebook stock in the past, but majority of the time the sell off has been contained within the 15% to 20% range.
+
+So how can one trade this event.
+
+After such as dramatic sell off, the implied volatility of the options spike higher. One potential trade idea is to sell the volatility (be short vol).
+
+
+```{r fb put variable, echo=FALSE, include=FALSE, message=FALSE, warning=FALSE}
+
+fb_o <- read_csv("~/Documents/greenleaf_data/fb_op_09_2018.csv")
+
+```
+
+```{r fb put options, echo=FALSE, message=FALSE, warning=FALSE}
+
+fb_o %>%
+  kable() %>%
+  kable_styling(bootstrap_options = "hover", full_width = FALSE)
+  
+
+```
+
+Above we can see the put option chain for Facebook for September 2018. 
+
+Selling the 165/160 vertical would yield approx \$1.27 on a \$5 spread. It does not look attractive at this moment. So we would wait at this moment. It is possible that Facebook may fall further in the coming days towards \$160 range. At that time we may consider the 155/150 spread. 
+
+At this moment the \$1.27 is not enough compensation to take this risk. So we will continue to monitor this stock.
+
+
+

@@ -1,0 +1,368 @@
+---
+title: "Chapter 5"
+output: html_document
+date: "2018-01-01"
+description: "Financial Modeling - Chapter 5"
+author: "Team Green"
+tag: ["Financial Modeling"]
+categories:
+  - Financial Modeling
+  - Tutorial
+tags:
+  - Financial Modeling
+cover: "five.jpg"
+---
+
+In this chapter we will discover ways to download economic data directly from FRED (Federal Reserve Economic data) into R.
+
+We will download :
+
+- Federal Funds Rate
+- 10 Year Treasury yield
+- 30 year fixed average mortgage rate for US
+- Civilian Unemployment rate
+- Housing Price Index
+- Real Estate Investment Trust Index (REIT)
+
+After that we will download and plot the interest rates for different maturities. We will visualize the shape of the yield curve and credit spread.
+
+
+
+```{r lib, warning=FALSE, message=FALSE}
+
+#loading libraries
+
+library(tidyquant)
+library(ggthemes)
+library(timetk)
+library(tibbletime)
+library(rvest)
+library(knitr)
+library(kableExtra)
+library(magick)
+
+```
+
+Downloading Fed Funds rate
+
+```{r FRED funds rate, warning=FALSE, message=FALSE}
+
+# Downloading federal funds rate
+
+fed_funds <- tq_get("FEDFUNDS",
+                    from = "1950-01-01",
+                    get = "economic.data")
+
+fed_funds %>%
+  mutate(price = price/100) %>%
+  ggplot(aes(x = date, y = price)) +
+  geom_line() +
+  ggtitle("Federal Funds Rate from 1955 to 2018") +
+  labs(x = "Date", y = "Rate") +
+  scale_y_continuous(labels = scales::percent,
+                     breaks = seq(0,0.2,0.02)) +
+  scale_x_date(date_breaks = "4 years", date_labels = "%Y") +
+  theme_bw()
+
+```
+
+ Downloading ten year Treasury yield
+ 
+```{r ten yr rate, warning=FALSE, message=FALSE}
+
+# Downloading federal funds rate
+
+ten <- tq_get("DGS10",
+                    from = "1950-01-01",
+                    get = "economic.data")
+
+ten %>%
+  mutate(price = price/100) %>%
+  ggplot(aes(x = date, y = price)) +
+  geom_line() +
+  ggtitle("10 Year Treasury Bonds Rate from 1960 to 2018") +
+  labs(x = "Date", y = "Rate") +
+  scale_y_continuous(labels = scales::percent,
+                     breaks = seq(0,0.2,0.02)) +
+  scale_x_date(date_breaks = "4 years", date_labels = "%Y") +
+  theme_bw()
+
+ten %>%
+  mutate(price = price/100) %>%
+  filter(date >= "2007-01-01") %>%
+  ggplot(aes(x = date, y = price)) +
+  geom_line() +
+  ggtitle("10 Year Treasury Bonds Rate from 2007 to 2018") +
+  labs(x = "Date", y = "Rate") +
+  scale_y_continuous(labels = scales::percent,
+                     breaks = seq(0,0.2,0.005)) +
+  scale_x_date(date_breaks = "1 years", date_labels = "%Y") +
+  theme_bw()
+
+```
+
+Downloading and plotting Average 30 Year Fixed Mortgage rate for USA
+
+```{r CPI, warning=FALSE, message=FALSE}
+
+mort_30y <- tq_get("MORTGAGE30US",
+                    from = "1950-01-01",
+                    get = "economic.data")
+
+mort_30y %>%
+  mutate(price = price/100) %>%
+  ggplot(aes(x = date, y = price)) +
+  geom_line() +
+  ggtitle("30 Year Fixed Mortgage Rate from 1971 to 2018") +
+  labs(x = "Date", y = "Rate") +
+  scale_y_continuous(labels = scales::percent,
+                     breaks = seq(0,0.2,0.01)) +
+  scale_x_date(date_breaks = "5 years", date_labels = "%Y") +
+  theme_bw()
+
+mort_30y %>%
+  mutate(price = price/100) %>%
+  filter(date >= "2007-01-01") %>%
+  ggplot(aes(x = date, y = price)) +
+  geom_line() +
+  ggtitle("30 Year Fixed Mortgage Rate from 2007 to 2018",
+          subtitle = "The down trend has stopped and we may be ready to change course") +
+  labs(x = "Date", y = "Rate") +
+  scale_y_continuous(labels = scales::percent,
+                     breaks = seq(0,0.2,0.005)) +
+  scale_x_date(date_breaks = "1 years", date_labels = "%Y") +
+  theme_bw()
+
+```
+
+Downloading and plotting Civilian unemployment rate
+
+```{r unrate, warning=FALSE, message=FALSE}
+
+unrate<- tq_get("UNRATE",
+                    from = "1950-01-01",
+                    get = "economic.data")
+
+unrate %>%
+  mutate(price = price/100) %>%
+  ggplot(aes(x = date, y = price)) +
+  geom_line() +
+  ggtitle("Unemployment Rate from 1950 to 2018") +
+  labs(x = "Date", y = "Unemployment Rate") +
+  scale_y_continuous(labels = scales::percent,
+                     breaks = seq(0,0.2,0.01)) +
+  scale_x_date(date_breaks = "5 years", date_labels = "%Y") +
+  theme_bw()
+
+
+unrate %>%
+  filter(date >= "1999-01-01") %>%
+  mutate(price = price/100) %>%
+  ggplot(aes(x = date, y = price)) +
+  geom_line() +
+  ggtitle("Unemployment Rate from 1999 to 2018") +
+  labs(x = "Date", y = "Unemployment Rate") +
+  scale_y_continuous(labels = scales::percent,
+                     breaks = seq(0,0.2,0.01)) +
+  scale_x_date(date_breaks = "2 years", date_labels = "%Y") +
+  theme_bw()
+
+
+```
+
+Downloading and plotting Housing Price Index
+
+```{r house, warning=FALSE, message=FALSE}
+
+#Downloading Case & Shiller 20 City Home Price Index
+
+housing <- tq_get("CSUSHPINSA",
+                  from = "1970-01-01",
+                  get = "economic.data")
+
+housing %>%
+  ggplot(aes(x = date, y = price)) +
+  geom_line() +
+  ggtitle("Case Shiller Housing Price Index from 1988 to 2018") +
+  labs(x = "Date", y = "Housing Price Index") +
+  scale_y_continuous(breaks = seq(50,220,10)) +
+  scale_x_date(date_breaks = "3 years", date_labels = "%Y") +
+  theme_bw()
+
+housing %>%
+  tq_transmute(select = price,
+               mutate_fun = periodReturn,
+               period = "monthly",
+               col_rename = "returns") %>%
+  mutate(cr = cumprod(1 + returns)) %>%
+  ggplot(aes(x = date, y = cr)) +
+  geom_line() +
+  ggtitle("Growth of $1 invested in US housing from 1988 to 2018") +
+  labs(x = "Date", y = "Growth $") +
+  scale_y_continuous(breaks = seq(0,3,0.5)) +
+  scale_x_date(date_breaks = "3 years", date_labels = "%Y") +
+  theme_bw()
+
+
+```
+
+Downloading and plotting US Real Estate Investment Trust (REITs)
+
+```{r Reit index, warning=FALSE, message=FALSE}
+
+reit <- tq_get("WILLREITIND",
+                  from = "1970-01-01",
+                  get = "economic.data")
+
+reit %>%
+  na.omit() %>%
+  ggplot(aes(x = date, y = price)) +
+  geom_line() +
+  ggtitle("Willshire REIT Index from 1978 to 2018") +
+  labs(x = "Date", y = "REIT Index") +
+  #scale_y_continuous(breaks = seq(50,220,10)) +
+  scale_x_date(date_breaks = "3 years", date_labels = "%Y") +
+  theme_bw()
+
+reit %>%
+  na.omit() %>%
+  tq_transmute(select = price,
+               mutate_fun = periodReturn,
+               period = "monthly",
+               col_rename = "returns") %>%
+  mutate(cr = cumprod(1 + returns)) %>%
+  ggplot(aes(x = date, y = cr)) +
+  geom_line() +
+  ggtitle("Growth of $1 in Willshire REIT Index \nfrom 1978 to 2018") +
+  labs(x = "Date", y = "Growth of $1") +
+  scale_y_continuous(breaks = seq(0,220,10)) +
+  scale_x_date(date_breaks = "3 years", date_labels = "%Y") +
+  theme_bw()
+
+
+
+```
+
+Next we will download the following yields for the following maturities
+
+- 3 months 
+- 1 Year
+- 2 Year
+- 5 Year
+- 10 Year
+- 20 Year
+- 30 Year
+
+
+```{r treasury yield curve, warning=FALSE, message=FALSE}
+
+bonds_yield_tickers <- tibble(symbol = c("DTB3", "DGS1", "DGS2", "DGS5", "DGS10", "DGS20", "DGS30"),
+                              Bonds = c("3 Month \nT-Bills", "1 Year \nNotes", "2 Year \nNotes",
+                                       "5 Year \nNotes", "10 Year \nBonds", "20 Year \nBonds",
+                                       "30 Year \nBonds"))
+
+bond_yields <- tq_get(bonds_yield_tickers,
+                      from = "1950-01-01",
+                      get = "economic.data")
+
+bond_yields <- bond_yields %>%
+  mutate(symbol = as_factor(symbol)) %>%
+  mutate(Bonds = as_factor(Bonds)) %>%
+   mutate(year = year(date))
+
+
+
+bond_yields %>%
+  mutate(symbol = as_factor(symbol)) %>%
+  filter(date >= Sys.Date() - 4) %>%
+  mutate(year = year(date)) %>%
+  ggplot(aes(x = Bonds, y = price,group = year)) +
+  geom_line() +
+  geom_point(size = 3) +
+  ggtitle("Treasury Yield Curve as of August 3, 2018") +
+  labs(x = "Bonds", y = "Interest Rates") +
+  scale_y_continuous(breaks = seq(0,3.5, 0.25))
+
+
+
+```
+
+But this is just a static yield curve and we may want to compare how the yield curve has changed throughout its history. Below we have put together an animated history of the yield curve since 1993. This is the yield curve for end of each year since 1993.
+
+
+```{r yield animation, warning=FALSE, message=FALSE}
+
+yc_animation <- image_read(path = "~/Documents/greenleaf_data/treasury_yield1.gif")
+yc_animation
+
+```
+
+
+Next we will download and plot the bond yield for the Moody's Aaa and Baa bonds from FRED.
+
+```{r AAA & BBB bonds,  warning=FALSE, message=FALSE}
+
+cred_bonds <- tibble(symbol = c("DAAA", "DBAA"),
+                     Bonds = c("AAA Bonds", "BAA Bonds"))
+
+cred_yield <- tq_get(cred_bonds,
+                     from = "1950-01-01",
+                     get = "economic.data")
+
+cred_yield %>%
+  group_by(Bonds) %>%
+  filter(date >= "1988-01-01") %>%
+  tq_transmute(mutate_fun = to.period,
+               period = "months") %>%
+  ggplot(aes(x = date, y = price, color = Bonds)) +
+  geom_line() +
+  ggtitle("Moody's Investment Grade Corporate Bond Yields from 1990 to 2018") +
+  scale_y_continuous(breaks = seq(0,12,1)) +
+  labs(x = "Date", y = "Interest Rates") +
+  theme_bw()
+
+```
+
+Next we will plot the spread between the Aaa rated bonds and the Baa bonds.
+
+```{r spread plot, warning=FALSE, message=FALSE}
+
+cred_yield %>%
+  group_by(Bonds) %>%
+  select(-symbol) %>%
+  filter(date >= "1988-01-01") %>%
+  tq_transmute(mutate_fun = to.period,
+               period = "months") %>%
+  spread(Bonds, value = price) %>%
+  mutate(spread =`BAA Bonds` - `AAA Bonds`) %>%
+  ggplot(aes(x = date, y = spread)) +
+  geom_line() +
+  ggtitle("Moody's Investment Grade Corporate bonds (Baa vs Aaa) \n spread from 1990 to 2018",
+          subtitle = "Higher the spread, higher compensation for taking the risk") +
+  scale_y_continuous(breaks = seq(0,12,0.5)) +
+  scale_x_date(date_breaks = "2 years", date_labels = "%Y") +
+  labs(x = "Date", y = "Interest Rates Spread") +
+  theme_bw()
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

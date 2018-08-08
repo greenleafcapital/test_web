@@ -1,0 +1,376 @@
+<!DOCTYPE HTML>
+
+<html lang='en'>
+	<head>
+		<title>Chapter 7 &middot; TWIST</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href='/assets/css/main.css' />
+		
+		<noscript><link rel="stylesheet" href='/assets/css/noscript.css' /></noscript>
+	</head>
+
+	<body lang='en' class="is-loading">
+
+		
+			<div id="wrapper">
+
+                
+<header id="header">
+    <a href='/' class="logo">TWIST</a>
+</header>
+
+                
+
+<nav id="nav">
+    <ul class="links">
+        
+	    
+		
+		
+		
+		
+		
+    
+    
+    <li class=""> <a href="/">Home</a></li>
+	
+                
+            
+            
+	
+	
+	
+    
+    <li class=""> <a href="/about/">About</a></li>
+	
+                
+            
+            
+	
+	
+	
+    
+    <li class=""> <a href="/news/">News</a></li>
+	
+                
+            
+            
+	
+	
+	
+    
+    <li class=""> <a href="/ideas/">Ideas &amp; Resources</a></li>
+	
+                
+            
+            
+	
+	
+	
+    
+
+        
+    </ul>
+    
+</nav>
+
+
+
+				
+					<div id="main">
+
+						
+                        <section class="post">
+                            <header class="major">
+                                
+                                <span class="date">January 1, 2018</span>
+                                
+                                <h1>Chapter 7</h1>
+                                <p>Financial Modeling - Chapter 7</p>
+                            </header>
+                            
+                            <div id="mean-variance-optimization" class="section level4">
+<h4>Mean Variance Optimization</h4>
+<p>In this chapter we will use mean and variance of different portfolio to choose the portfolios that offer that offer the highest returns for a given level of risk.</p>
+<p>We will construct a diversified portfolio of different assets such as bonds, stocks commodities etc.</p>
+<pre class="r"><code>library(PortfolioAnalytics)
+library(tidyquant)
+library(ggthemes)
+library(tseries)
+library(timetk)</code></pre>
+<p>We will choose the following assets for building our portfolio.</p>
+<ul>
+<li>SPY for S&amp;P 500 Index</li>
+<li>VEU for International equities</li>
+<li>IJS for small cap stocks</li>
+<li>EEM for emerging market stocks</li>
+<li>AGG for aggregate bonds</li>
+<li>GLD for Gold</li>
+<li>TLT for long government bonds</li>
+</ul>
+<pre class="r"><code>tickers &lt;- c(&quot;SPY&quot;, &quot;VEU&quot;, &quot;IJS&quot;, &quot;EEM&quot;, &quot;AGG&quot;, &quot;GLD&quot;, &quot;TLT&quot;)
+
+#Download price data
+price_data &lt;- tq_get(tickers,
+                     from = &quot;2011-01-01&quot;)
+#Calculate returns and spread into an xts object
+
+returns &lt;- price_data %&gt;%
+  group_by(symbol) %&gt;%
+  tq_transmute(select = adjusted,
+               mutate_fun = periodReturn,
+               period = &quot;monthly&quot;,
+               col_rename = &quot;returns&quot;) %&gt;%
+  spread(symbol, value = returns) %&gt;%
+  tk_xts()</code></pre>
+<p>After calculating the monthly returns we will use the tseries package to calculate the optimal portfolio weights for our objectives and constraints.</p>
+<p>First we will generate 5000 random portfolio with random weights assigned to the assets described above. Then we will calculate the mean and standard deviation for each portfolio and plot the result.</p>
+<pre class="r"><code># First we will create two empty vectors to store our mean and standard deviation
+
+port_sd &lt;- port_mean &lt;- rep(NA,5000) 
+
+# Next we will create an empty table to store the combined mean and standard deviation data
+
+port_tbl &lt;- tibble(m = logical(),
+                   s = logical())
+
+# Running the simulation by using the for loop to generate mean and standard deviations
+# for 5000 portfolios
+
+for (i in seq_along(port_sd)) {
+  
+  weight &lt;- diff(c(0,sort(runif(6)),1))
+  ret &lt;- colMeans(returns)
+  cov_mat &lt;- cov(returns)
+  port_ret &lt;- sum(weight * ret)
+  sd &lt;- sqrt(t(weight) %*% cov_mat %*% weight)
+  port_tbl[i,] &lt;- c(port_ret, sd)
+  
+  
+}
+
+
+# Plotting the result below
+
+port_tbl %&gt;%
+  ggplot(aes(x = s, y = m)) +
+  geom_point() +
+  ggtitle(&quot;Mean and Standard Deviation for 5000 portfolios&quot;) +
+  labs(x = &quot;Standard Deviation&quot;, y = &quot;Mean&quot;) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_x_continuous(labels = scales::percent) +
+  theme_bw()</code></pre>
+<p><img src="/post/ch7_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
+<p>From the above chart we can visualize the mean and standard deviation for the 5000 portfolios. Some portfolios are clearly more efficient than others. For example the portfolios on the bottom right have standard deviation of about 0.04 and minimal returns. We can achieve much better results for much lower volatility.</p>
+<p>First we will calculate the weights for the minimum variance portfolios. The we will see returns for this portfolio since 2011. After that we will calculate the weights of the tangency portfolio (portfolio which has the highest Sharpe ratio) and plot our results.</p>
+<pre class="r"><code># Calculating the minimum variance portfolio
+opt_port &lt;- portfolio.optim(returns)
+
+
+port_weights &lt;- opt_port$pw
+names(port_weights) &lt;- colnames(returns)
+
+port_wt_tbl &lt;- tibble(Asset = names(port_weights),
+       Weight = port_weights)
+
+port_wt_tbl %&gt;%
+  ggplot(aes(x = Asset, y = Weight)) +
+  geom_bar(stat = &quot;identity&quot;) +
+  scale_y_continuous(labels = scales::percent) +
+  ggtitle(&quot;Minimum variance portfolio weights&quot;) +
+  theme_bw()  </code></pre>
+<p><img src="/post/ch7_files/figure-html/port%20opt-1.png" width="672" /></p>
+<pre class="r"><code>port_ret_tbl &lt;- tibble(date = 1:92,
+       port_ret=opt_port$px) %&gt;%
+  mutate(date = seq(ymd(&quot;2011-01-01&quot;), ymd(&quot;2018-08-03&quot;), by = &quot;months&quot;))
+
+port_ret_tbl %&gt;%
+  ggplot(aes(x = date, y = port_ret)) +
+  geom_bar(stat = &quot;identity&quot;) +
+  ggtitle(&quot;Monthly returns for the Minimum variance portfolio from 2011 to 2018&quot;) +
+  labs(x = &quot;Date&quot;, y = &quot;Portfolio Returns&quot;) +
+  scale_y_continuous(labels = scales::percent) +
+  geom_hline(yintercept = 0) +
+  theme_bw()</code></pre>
+<p><img src="/post/ch7_files/figure-html/port%20opt-2.png" width="672" /></p>
+<pre class="r"><code>port_ret_tbl %&gt;%
+  mutate(cr = cumprod(1 + port_ret)) %&gt;%
+  ggplot(aes(x = date, y = cr)) +
+  geom_line() +
+  ggtitle(&quot;Growth of $1 invested in the Minimum variance portfolio since 2011 to 2018&quot;) +
+  labs(x = &quot;Date&quot;, y = &quot;Growth of $1&quot;) +
+  theme_bw()</code></pre>
+<p><img src="/post/ch7_files/figure-html/port%20opt-3.png" width="672" /></p>
+<p>Next we will plot the efficient frontier and calculate the efficient frontier portfolio.</p>
+<pre class="r"><code># Create a vector series for target returns
+
+tgt_ret &lt;- seq(0, 0.01109935, length.out = 100)
+
+# Create empty vector to store all the Standard deviations
+
+eff_sd &lt;- vector(mode = &quot;numeric&quot;, length = length(tgt_ret))
+
+# Create empty vector to store all the Mean returns
+
+eff_mean &lt;- vector(mode = &quot;numeric&quot;, length = length(tgt_ret))
+
+# Create empty table to store all the different portfolio Weights
+
+eff_wt &lt;- matrix(ncol = 7, nrow = length(tgt_ret))
+eff_wt &lt;- tk_tbl(data.frame(eff_wt))
+colnames(eff_wt) &lt;- colnames(returns)
+
+# Running the simulation
+
+for(i in seq_along(tgt_ret)) {
+  
+  opt &lt;- portfolio.optim(returns, pm = tgt_ret[i])
+  eff_sd[i] &lt;- opt$ps
+  eff_mean[i] &lt;- opt$pm
+  eff_wt[i,] &lt;- opt$pw
+  
+}
+
+# Creating the Portfolio Weights and mean/sd table
+
+eff_wt_tbl &lt;- eff_wt %&gt;%
+  mutate(mean = eff_mean,
+         sd = eff_sd,
+         index = 1:length(eff_wt$EEM))
+
+# Calculating the sharpe ratios
+# Using 0.075% as risk free rate
+
+sharpe &lt;- (eff_mean - 0.00075)/eff_sd
+
+# We can now calculate the maximum sharpe ratio
+max(sharpe)</code></pre>
+<pre><code>## [1] 0.4603398</code></pre>
+<pre class="r"><code># Which portfolio had maximum sharpe ratio
+
+eff_wt_tbl[which.max(sharpe),] %&gt;%
+  gather(AGG:VEU,key = assets,value = wt) %&gt;%
+  ggplot(aes(x = assets, y = wt)) +
+  geom_bar(stat = &quot;identity&quot;) +
+  ggtitle(&quot;Portfolio weights for the highest Sharpe Ratio&quot;) +
+  scale_y_continuous(labels = scales::percent) +
+  labs(x = &quot;Assets&quot;, y = &quot;Weight&quot;) +
+  theme_bw()</code></pre>
+<p><img src="/post/ch7_files/figure-html/eff_frontier-1.png" width="672" /></p>
+<pre class="r"><code># Now we will plot the efficient frontier
+
+eff_wt_tbl %&gt;%
+  mutate(sharpe = (mean - 0.0075)/sd) %&gt;% # Adding the Sharpe ratio
+  ggplot(aes(x = sd, y = mean)) +
+  geom_point(color = &quot;grey&quot;) +
+  geom_point(data = eff_wt_tbl[27,c(8,9)], mapping = aes(x = sd, y = mean), color = &quot;red&quot;) +
+  geom_point(data = eff_wt_tbl[80,c(8,9)], mapping = aes(x = sd, y = mean), color = &quot;blue&quot;) +
+  ggtitle(&quot;Mean and Standard Deviation for Efficient frontier portfolios&quot;,
+          subtitle = &quot;Red dot denotes the minimum variance portfolio \nBlue dot denotes the tangency portfoltio (highest Sharpe ratio)&quot;) +
+  labs(x = &quot;Standard Deviation&quot;, y = &quot;Mean&quot;) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_x_continuous(labels = scales::percent) +
+  coord_cartesian(xlim = c(0.007,0.027),
+                  ylim = c(0,0.0098)) +
+  theme_bw() </code></pre>
+<p><img src="/post/ch7_files/figure-html/eff_frontier-2.png" width="672" /></p>
+</div>
+
+
+                            
+                            
+                            
+                            
+                            
+                        </section>
+
+					</div>
+
+                    
+
+<footer id="footer">
+    
+    <section>
+        <form method="post" action="post-action">
+            <div class="field">
+                <label for="name">Name</label>
+                <input type="text" name="name" id="name" />
+            </div>
+            <div class="field">
+                <label for="email">Email</label>
+                <input type="text" name="email" id="email" />
+            </div>
+            <div class="field">
+                <label for="message">Message</label>
+                <textarea name="message" id="message" rows="3"></textarea>
+            </div>
+            <ul class="actions">
+                <li><input type="submit" value='Send A Message' /></li>
+            </ul>
+        </form>
+    </section>
+    
+    <section class="split contact">
+        
+        <section class="alt">
+            <h3>Address</h3>
+            <p>
+                
+                     1234 Somewhere Road #87257
+                
+                     <br/>  Nashville, TN 00000-0000
+                
+            </p>
+        </section>
+        
+        
+        <section>
+            <h3>Phone</h3>
+            <p><a href="tel:%28800%29%20000-0000">(800) 000-0000</a></p>
+        </section>
+        
+        
+        <section>
+            <h3>Email</h3>
+            <p><a href="mailto:someone@untitled.tld">someone@untitled.tld</a></p>
+        </section>
+        
+        
+        <section>
+            <h3>Social</h3>
+            <ul class="icons alt">
+                
+                
+                
+                
+                
+                <li><a href="https://github.com/" class="icon alt fa-github"><span class="label">GitHub</span></a></li>
+                
+                
+                
+                
+                
+            </ul>
+        </section>
+        
+    </section>
+</footer>
+
+                    
+>
+
+
+            </div>
+            
+            
+<script src='/assets/js/jquery.min.js'></script>
+<script src='/assets/js/jquery.scrollex.min.js'></script>
+<script src='/assets/js/jquery.scrolly.min.js'></script>
+<script src='/assets/js/skel.min.js'></script>
+<script src='/assets/js/util.js'></script>
+<script src='/assets/js/main.js'></script>
+
+
+	</body>
+</html>

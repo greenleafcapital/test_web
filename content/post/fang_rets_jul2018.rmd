@@ -1,0 +1,81 @@
+---
+title: "FANG Stocks"
+author: 'Team Green'
+date: '2018-07-27'
+slug: FANG
+description: "FANG Performance"
+cover: "fang_ytd_jul.png"
+categories:
+  - fang
+  - stocks
+tags:
+  - fang
+  - stocks
+---
+
+```{r lib, warning=FALSE,message=FALSE,include=FALSE}
+
+library(tidyquant)
+
+tickers <- c('FB', "NFLX", "AMZN", "GOOG", "AAPL", "QQQ")
+
+price_data <- tq_get(tickers,
+                     from = "2018-01-01",
+                     to = "2018-07-28",
+                     get = 'stock.prices')
+
+```
+
+FAANG stock performance since July 1, 2018
+
+```{r chart, warning=FALSE,message=FALSE,echo=FALSE}
+
+price_data %>%
+  filter(date >= '2018-07-01') %>%
+  group_by(symbol) %>%
+  tq_transmute(select = adjusted,
+               mutate_fun = periodReturn,
+               period = 'daily',
+               col_rename = 'ret') %>%
+  mutate(cr = cumprod(1 + ret)) %>%
+  mutate(returns = cr - 1) %>%
+  ggplot(aes(x = date, y = returns, color = symbol)) +
+  geom_line() +
+  theme_classic() +
+  geom_hline(yintercept = 0) +
+  ggtitle("FANG stock performance since Jul 1st, 2018") +
+  labs(x = "Date", y = "Returns") +
+  scale_y_continuous(labels = scales::percent)
+
+```
+
+With Netflix and Facebook both suffering major losses, all eyes will be on Apple as it races to be the first company with a $1 Trillion valuation.
+
+How have the FAANG stocks performed YTD
+
+
+```{r YTD chart, warning=FALSE,message=FALSE,echo=FALSE}
+
+price_data %>%
+  #filter(date >= '2018-07-01') %>%
+  group_by(symbol) %>%
+  tq_transmute(select = adjusted,
+               mutate_fun = periodReturn,
+               period = 'daily',
+               col_rename = 'ret') %>%
+  mutate(cr = cumprod(1 + ret)) %>%
+  mutate(returns = cr - 1) %>%
+  ggplot(aes(x = date, y = returns, color = symbol)) +
+  geom_line() +
+  theme_bw() +
+  geom_hline(yintercept = 0) +
+  ggtitle("FANG stock performance since Jan 1st, 2018") +
+  labs(x = "Date", y = "Returns") +
+  scale_y_continuous(labels = scales::percent,
+                     breaks = seq(-0.1,0.9,0.1))
+
+```
+
+Netflix and Amazon have clearly dominated the large cap stocks. This has been a terrible year of performance for managers who make a living by shorting "bubble basket stocks".
+
+

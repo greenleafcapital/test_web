@@ -1,0 +1,615 @@
+---
+title: "Chapter 4"
+output: html_document
+date: "2018-01-01"
+description: "Financial Modeling - Chapter 4"
+author: "Team Green"
+tag: ["Financial Modeling"]
+categories:
+  - Financial Modeling
+  - Tutorial
+tags:
+  - Financial Modeling
+cover: four.jpg
+---
+
+## Chapter 4
+
+```{r lib, warning=FALSE, message=FALSE}
+
+library(tidyquant)
+library(ggthemes)
+library(timetk)
+library(tibbletime)
+library(rvest)
+library(knitr)
+library(kableExtra)
+
+```
+
+In this chapter we will use the Fama French 3 factors data file to calculate the long term stocks and risk free returns. We will also produce a portfolio and compare the risk and returns with the 3 factors model.
+
+The Fama French 3 factors model was downloaded from the following [link](http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_CSV.zip)
+
+First we will begin by loading the data directly from the website into R.
+
+```{r load FF data file,warning=FALSE, message=FALSE}
+
+factors <- "F-F_Research_Data_Factors"
+
+ff_web <- paste("http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/", factors, "_CSV.zip", sep = "")
+
+ff_csv <- paste(factors, ".csv", sep = "")
+
+temp = tempfile()
+
+download.file(ff_web,temp)
+
+ff_factors <- read_csv(unzip(temp), skip = 3) # skip the first 3 lines of the Document
+
+
+
+```
+
+Once we have the file loaded we will need to clean it and make it useful for our needs.
+
+```{r wrangling,warning=FALSE, message=FALSE}
+
+#Checking the file 
+
+head(ff_factors)
+tail(ff_factors)
+
+#The file seems to have monthly data as well as yearly data at the end
+#We will work with the monthly data and hence delete the yearly data
+
+ff_factors <- ff_factors %>%
+  rename(date = X1) %>%
+  mutate(date = as.character(date)) %>%
+  mutate(year = str_sub(date, start = 1, end = 4)) %>%
+  mutate(month = str_sub(date, start = 5, end = 6)) %>%
+  filter(month != "") %>%
+  select(-year, -month)
+
+# Now we will create a new date series and add that to our data table  
+
+date_ff <- seq(ymd("1926-07--01"), ymd("2018-07-01"), by = "months") - 1
+date_ff <- date_ff[-1] 
+
+ff_factors <- ff_factors %>%
+  mutate(date = date_ff)
+
+#Changing names
+
+ff_factors <- ff_factors %>%
+   rename(risk_prem = `Mkt-RF`,
+         smb = SMB,
+         hml = HML,
+         rf = RF)
+
+# The FF data needs to be converted for it to be consistent with our percentage returns data. All we need to do is divide it by 100.
+# We are going to create a custom function that takes a number and divides it by 100
+
+division_func <- function(x) {
+  x/100
+}
+
+# We will apply this function to our data frame
+
+ff_factors <- tk_tbl(data.frame(apply(ff_factors[-1], 2, division_func))) %>%
+  mutate(date = date_ff) %>%
+  select(date,everything())
+
+
+```
+
+
+Lets now plot the Risk free rates and the Risk Premiums for the market returns
+
+```{r plot 1926 rf and prem,warning=FALSE, message=FALSE}
+
+#Plotting Risk premium since 1926
+
+ff_factors %>%
+  ggplot(aes(x = date, y = risk_prem)) +
+  geom_line() +
+  scale_x_date(date_breaks = "5 years", date_labels = "%Y") +
+  scale_y_continuous(breaks = seq(-0.3,0.5,0.05),
+                     labels = scales::percent) +
+  geom_hline(yintercept = 0) +
+  labs(x = "Date", y = "Risk Premium") +
+  ggtitle("Equity Risk Premium since 1926") +
+  theme(axis.text.x = element_text(angle = 45)) +
+  theme_bw()
+
+#Plotting Risk free rate since 1926
+
+ff_factors %>%
+  ggplot(aes(x = date, y = rf)) +
+  geom_line() +
+  scale_x_date(date_breaks = "5 years", date_labels = "%Y") +
+  scale_y_continuous(breaks = seq(0,0.02,0.001),
+                     labels = scales::percent) +
+  geom_hline(yintercept = 0) +
+  labs(x = "Date", y = "Risk Free rate") +
+  ggtitle("Risk Free rates since 1920",
+          subtitle = "We can see that during depression, risk free rates drop to 0%") +
+  theme(axis.text.x = element_text(angle = 45),
+        panel.background = element_rect(fill = NA),
+        panel.grid.major.y = element_line(color = "grey"))
+
+
+```
+
+
+```{r plot 1990 rf and prem,warning=FALSE, message=FALSE}
+
+#Plotting Risk premium since 1990
+ff_factors %>%
+  filter(date >= "1990-01-01") %>%
+  ggplot(aes(x = date, y = risk_prem)) +
+  geom_line() +
+  scale_x_date(date_breaks = "3 years", date_labels = "%Y") +
+  scale_y_continuous(breaks = seq(-0.3,0.5,0.05),
+                     labels = scales::percent) +
+  geom_hline(yintercept = 0) +
+  labs(x = "Date", y = "Risk Premium") +
+  ggtitle("Equity Risk Premium since 1990") +
+   theme(axis.text.x = element_text(angle = 45),
+        panel.background = element_rect(fill = NA),
+        panel.grid.major.y = element_line(color = "grey"))
+  
+
+
+```
+
+Lets now look at the total returns from the stock market
+
+```{r stock market returns, warning=FALSE, message=FALSE}
+
+ff_factors %>%
+  mutate(market = risk_prem + rf) %>%
+  mutate(market = if_else(date == "1926-07-31", 0, market)) %>%
+  mutate(cr = cumprod(1 + market)) %>%
+  mutate(cum_returns = cr - 1) %>%
+  ggplot(aes(x = date, y = cum_returns)) +
+  geom_line() +
+  scale_x_date(date_breaks = "10 years", date_labels = "%Y") +
+  ggtitle("Cumulative Stock market returns since 1926",
+          subtitle = "A $1 investment in 1926 grew to about $6000") +
+  labs(x = "Date", y = "Cumulative Returns") +
+   theme(axis.text.x = element_text(angle = 45),
+        panel.background = element_rect(fill = NA),
+        panel.grid.major.y = element_line(color = "grey"))
+
+```
+
+Lets calculate the cumulative returns since 1990
+
+```{r stock market returns 1990, warning=FALSE, message=FALSE}
+
+ff_factors %>%
+  mutate(market = risk_prem + rf) %>%
+  filter(date >= "1989-12-31") %>%
+  mutate(market = if_else(date == "1989-12-31", 0, market)) %>%
+  mutate(cr = cumprod(1 + market)) %>%
+  mutate(cum_returns = cr - 1) %>%
+  ggplot(aes(x = date, y = cum_returns)) +
+  geom_line() +
+  scale_x_date(date_breaks = "2 years", date_labels = "%Y") +
+  scale_y_continuous(breaks = seq(0,15,2)) +
+  ggtitle("Cumulative Stock market returns since 1990",
+          subtitle = "A $1 investment would have increased to $14") +
+  labs(x = "Date", y = "Cumulative Returns") +
+   theme(axis.text.x = element_text(angle = 45),
+        panel.background = element_rect(fill = NA),
+        panel.grid.major.y = element_line(color = "grey"))
+  
+  
+```
+
+
+#### Capital Asset Pricing Model (CAPM)
+
+Capital asset pricing model (CAPM) is used to calculate the expected returns for an asset(for example Apple stock). The expected returns should equal the risk free rate plus the market risk premium adjusted for the volatility of the asset. This article goes into great detail to explain more about CAPM.
+
+https://hbr.org/1982/01/does-the-capital-asset-pricing-model-work
+
+We will demonstrate how to use CAPM with actual stock market data. For our example we will use the Netflix stock.
+
+We will need the risk free rate, S&P 500 returns(benchmark), Netflix returns from 2010
+
+```{r NFLX capm, warning=FALSE, message=FALSE}
+
+# Download price data
+
+nflx_price <- tq_get("NFLX",
+                     from = "2010-01-01",
+                     to = "2018-07-31",
+                     get = "stock.prices")
+
+nflx_returns <- nflx_price %>%
+  tq_transmute(select = adjusted,
+               periodReturn,
+               period = "monthly",
+               col_rename = "nflx_returns")
+
+#Using SPY as a proxy for Market returns
+spx_price <- tq_get("SPY",
+                    from = "2010-01-1",
+                    to = "2018-07-31",
+                    get = "stock.prices")
+
+spx_returns <- spx_price %>%
+  tq_transmute(select = adjusted,
+               mutate_fun = periodReturn,
+               period = "monthly",
+               col_rename = "spx_returns")
+
+# Using the 3 month Tbill as a proxy for risk free rate
+
+tbill <- tq_get("DGS3MO",
+                from = "2010-01-01",
+                to = "2018-07-31",
+                get = "economic.data") %>%
+  tq_transmute(mutate_fun = to.period,
+               period = "months") %>%
+  rename(risk_free = price) %>%
+  mutate(risk_free = risk_free/100)
+
+# The above data is annualized yield
+# We have to convert from annualized yield to monthly yield
+
+tbill_monthly <- tbill %>%
+  mutate(risk_free = (1 + risk_free)^(1/12) - 1)
+  
+# Now we combine all the data into a data table
+
+data_table <- nflx_returns %>%
+  mutate(spx = spx_returns$spx_returns,
+         risk_free = tbill_monthly$risk_free) %>%
+  mutate(nflx_excess = nflx_returns - risk_free) %>%
+  mutate(spx_excess = spx - risk_free)
+
+# Using regression to calculate the coefficients
+
+capm <- lm(data_table$nflx_returns ~ data_table$spx)
+
+nflx_beta <- summary(capm)$coefficient[2]
+nflx_alpha <- summary(capm)$coefficient[1]  
+
+tribble(~NFLX_Alpha,~NFLX_Beta,
+        nflx_alpha, nflx_beta) %>%
+  kable()
+  
+```
+
+This is a static Alpha and Beta for the time period selected(which was 2010 to 2018) We know that the alpha and beta for Netflix changed throughout its history.
+
+So we can calculate the rolling alpha and beta for Netflix.
+
+```{r rolling alpha beta NFLX,warning=FALSE, message=FALSE}
+
+# For that we need to convert the data_table to an xts object
+
+data_table_xts <- data_table %>%
+  select(date, nflx_returns, spx) %>%
+  tk_xts()
+
+coeffs_nflx <- rollapply(data_table_xts,
+                    width = 12,
+                    FUN = function(X)
+                      {
+                      roll.reg = lm(nflx_returns ~ spx,
+                                    data = as.data.frame(X))
+                                    return(roll.reg$coef)
+                    },
+                    by.column = FALSE)  
+
+coeffs_nflx <- coeffs_nflx %>%
+  tk_tbl() %>%
+  rename(alpha = X.Intercept.,
+         beta = spx,
+         date = index)
+
+coeffs_nflx %>%
+  na.omit() %>%
+  ggplot(aes(x = date, y = alpha)) +
+  geom_line() +
+  ggtitle("Netflix rolling Alpha since 2011 vs S&P 500") +
+  labs(x = "Date", y = "Alpha") +
+  scale_y_continuous(labels = scales::percent) +
+  geom_hline(yintercept = 0) +
+  theme_bw()
+
+coeffs_nflx %>%
+  na.omit() %>%
+  ggplot(aes(x = date, y = beta)) +
+  geom_line() +
+  ggtitle("Netflix rolling Beta since 2011 vs S&P 500") +
+  labs(x = "Date", y = "Beta") +
+  geom_hline(yintercept = 0) +
+  theme_bw()
+
+
+```
+
+
+Next we will build a portfolio of five stocks and calculate its alpha and beta versus the benchmark S&P 500 portfolio.
+
+```{r portfolio vs S&P 500,warning=FALSE, message=FALSE}
+
+# We will randomly select 5 tickers from the S&P 500 stocks to avoid any bias
+# We have been using too much of the FANG stocks
+
+# First we will download the S&P 500 tickers from Wikipedia
+
+sp500_wiki <- read_html("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies")
+
+sp500_tickers <- sp500_wiki %>%
+  html_nodes("td:nth-child(1) .text") %>%
+  html_text()
+
+#Run the below comman to generate 5 ticker symbols. Remove the comment symbol "#"
+
+#sample(sp500_tickers, size = 5) 
+
+# Note - When you run this command you will get a different sample of tickers.
+# But for us the tickers were as below
+
+
+portfolio_tickers <- c("GILD", "BA", "XRAY", "APTV", "DHI")
+
+# Our portfolio has Gilead, Boeing, Denstply, Aptiv, DH Horton
+# Below we will specify weight to the stock randomly
+
+# We will generate random weights for the stocks such that they sum to 100% (no leverage or short selling)
+
+set.seed(1589) # We need to set this so we don't get different numbers each time we run this
+
+w <- diff(c(0,sort(runif(4)),1)) # again this will be different when you run it.
+
+# Since its using a random method
+# See below our portfolio with weights
+
+portfolio_weights <- tibble(symbol = portfolio_tickers,
+                            weight = w)
+portfolio_weights %>%
+  kable()
+  
+```
+
+We could have just picked 5 tickers on our own and assigned a round number weight, but we wanted to demonstrate the ability to download data directly from a website using R and also how to generate random numbers.
+
+Next we will download the price data and calculate the performance.
+
+```{r portfolio price, warning=FALSE, message=FALSE}
+
+# Download stock prices
+stock_price <- tq_get(portfolio_tickers,
+                          from = "2015-01-01",
+                          get = "stock.prices")
+
+# Calculate the stock returns
+
+stock_returns <- stock_price %>%
+  group_by(symbol) %>%
+  tq_transmute(select = adjusted,
+               mutate_fun = periodReturn,
+               period = "monthly",
+               col_rename = "returns")
+  
+# Calculate the portfolio returns
+
+portfolio_returns <- stock_returns %>%
+  tq_portfolio(assets_col = symbol,
+               returns_col = returns,
+               weights = portfolio_weights,
+               col_rename = "port_ret")
+
+# Now we will download the the Benchmark Returns. In our case S&P 500 
+
+benchmark_price <- tq_get("SPY",
+                          from = "2015-01-01",
+                          get = "stock.prices")
+
+benchmark_returns <- benchmark_price %>%
+  tq_transmute(select = adjusted,
+               mutate_fun = periodReturn,
+               period = "monthly",
+               col_rename = "spx")
+
+# Now we will download the Risk free asset returns. 
+# We will use the 3 month Tbills for our purpose
+
+tbill <- tq_get("DGS3MO",
+                      from = "2015-01-01",
+                      get = "economic.data") %>%
+  tq_transmute(mutate_fun = to.period,
+               period = "months") %>%
+  rename(risk_free = price) %>%
+  mutate(risk_free = risk_free/100)
+
+# We have to convert from annualised yield to monthly yield
+
+tbill_monthly <- tbill %>%
+  mutate(risk_free = (1 + risk_free)^(1/12) - 1)
+
+
+# Next we will combine all the data
+
+comb_data <- portfolio_returns %>%
+  mutate(benchmark = benchmark_returns$spx,
+         risk_free = tbill_monthly$risk_free) %>%
+  mutate(port_ex = port_ret - risk_free,
+         bench_ex = benchmark - risk_free)
+
+#Next we run regression on the excess returns
+
+capm_portfolio <- lm(comb_data$port_ex ~ comb_data$bench_ex)
+summary(capm_portfolio)
+
+portfolio_alpha <- capm_portfolio$coefficients[1]
+portfolio_beta <- capm_portfolio$coefficients[2]
+
+tribble(~Alpha,~Beta,
+        portfolio_alpha, portfolio_beta) %>%
+  kable()
+
+```
+
+Similar to Netflix stock we will plot the rolling Alpha and Beta for our Portfolio.
+
+
+```{r portfolio rolling alpha and beta, warning=FALSE, message=FALSE}
+
+#Converting to an xts object
+
+comb_data_xts <- comb_data %>%
+  tk_xts()
+
+coeffs_portfolio <- rollapply(comb_data_xts,
+                    width = 12,
+                    FUN = function(X)
+                      {
+                      roll.reg = lm(port_ret ~ benchmark,
+                                    data = as.data.frame(X))
+                                    return(roll.reg$coef)
+                    },
+                    by.column = FALSE)  
+
+coeffs_portfolio <- coeffs_portfolio %>%
+  tk_tbl() %>%
+  rename(alpha = X.Intercept.,
+         beta = benchmark,
+         date = index)
+
+coeffs_portfolio %>%
+  na.omit() %>%
+  ggplot(aes(x = date, y = alpha)) +
+  geom_line() +
+  ggtitle("Portfolio rolling Alpha since 2011 vs S&P 500") +
+  labs(x = "Date", y = "Alpha") +
+  scale_y_continuous(labels = scales::percent) +
+  geom_hline(yintercept = 0) +
+  theme_bw()
+
+coeffs_portfolio %>%
+  na.omit() %>%
+  ggplot(aes(x = date, y = beta)) +
+  geom_line() +
+  ggtitle("Portfolio rolling Beta since 2011 vs S&P 500") +
+  labs(x = "Date", y = "Beta") +
+  geom_hline(yintercept = 0) +
+  theme_bw()
+
+
+```
+
+
+Next we will use the Fama French 3 factor model for calculating the alpha and beta for our portfolio.
+
+```{r fama french portfolio, warning=FALSE, message=FALSE}
+
+# We will first download the file from the website
+
+# This procedure is the same one we used previously in this chapter.
+# You can use this as a practice
+
+ff_csv <- paste("F-F_Research_Data_Factors_CSV", ".csv",sep = "")
+
+ff_web_file <- "F-F_Research_Data_Factors_CSV"
+
+fama_url <- paste("http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/", ff_web_file, ".zip", sep = "")
+
+temp <- tempfile()
+
+download.file(fama_url, temp)
+
+ff_data <- read_csv(unzip(temp),skip = 3)
+
+
+ff_factors <- ff_data %>%
+  rename(date = X1) %>%
+  mutate(date = as.character(date)) %>%
+  mutate(year = str_sub(date, start = 1, end = 4)) %>%
+  mutate(month = str_sub(date, start = 5, end = 6)) %>%
+  filter(month != "") %>%
+  select(-year, -month)
+
+# Now we will create a new date series and add that to our data table  
+
+date_ff <- seq(ymd("1926-07--01"), ymd("2018-07-01"), by = "months") - 1
+date_ff <- date_ff[-1] 
+
+ff_factors <- ff_factors %>%
+  mutate(date = date_ff)
+
+#Changing names
+
+ff_factors <- ff_factors %>%
+   rename(risk_prem = `Mkt-RF`,
+         smb = SMB,
+         hml = HML,
+         rf = RF)
+
+
+
+division_func <- function(x) {
+  x/100
+}
+
+
+ff_factors <- tk_tbl(data.frame(apply(ff_factors[-1], 2, division_func))) %>%
+  mutate(date = date_ff) %>%
+  select(date,everything())
+
+
+# The FF data is available only through June 2018.
+# Our portfolio data is from Jan 2015 to Aug 2018. 
+# So we need to align our portfolio data with FF data
+
+portfolio_returns <- portfolio_returns %>%
+  filter(date <= "2018-06-30") 
+
+ff_factors <- ff_factors %>%
+  filter(date >= "2015-01-01") 
+
+
+# Now we add our portfolio returns to the Ff data
+
+ff_portfolio <- ff_factors %>%
+  mutate(portfolio = portfolio_returns$port_ret)
+
+# Next we will run the regression 
+
+port_ff_reg <- lm(ff_portfolio$portfolio ~ ff_portfolio$risk_prem + smb + hml, data = ff_portfolio)
+
+portfolio_alpha_ff <- port_ff_reg$coefficients[1]
+portfolio_beta_ff <- port_ff_reg$coefficients[2]
+
+# We will create a table to combine for regression data
+
+alf_beta_tbl <- tribble(~Method,~Alpha,~Beta,
+                        "CAPM", portfolio_alpha, portfolio_beta,
+                        "Fama & French", portfolio_alpha_ff, portfolio_beta_ff)
+
+alf_beta_tbl %>%
+  kable(caption = 
+          
+          "Calculating Alpha and Beta using different methods") %>%
+  kable_styling(bootstrap_options = "hover", full_width = FALSE)
+
+```
+
+
+We can see above how the two methods compare with each other. Our portfolio had a slight out performance using the CAPM method, but under performed when we used the Fama & French model.
+
+
+
+
+
+
+
+
+

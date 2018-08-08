@@ -1,0 +1,143 @@
+---
+title: "TLT trade - Iron Condor"
+author: "Team Green"
+date: "2018-08-08"
+categories:
+  - Market
+  - bonds
+tags:
+  - market
+  - rates
+  - bonds
+output:
+  pdf_document: default
+  html_document: default
+description: "Can interest rates stay range bound for the rest of the year?"
+cover: "tlt-2017.png"
+    
+---
+
+```{r lib, warning=FALSE, message=FALSE, echo=FALSE}
+
+library(tidyquant)
+library(ggvis)
+library(timetk)
+library(knitr)
+library(kableExtra)
+
+```
+
+
+```{r tlt price, warning=FALSE, message=FALSE, echo=FALSE}
+
+tlt_hist <- tq_get("TLT",
+                   from = "2013-01-01",
+                   get = "stock.prices")
+
+tlt_ret_hist <- tlt_hist %>%
+  tq_transmute(select = adjusted,
+               mutate_fun = periodReturn,
+               period = "monthly",
+               col_rename = 'returns')
+
+```
+
+Today we executed a trade to sell both call and put verticals on the underlying TLT etf (Long US government bonds etf). For the trade to make money, both legs of the trade need to expire worthless. First lets start by looking at the historical returns and volatility of Long Bonds since summer of 2016.
+
+
+```{r tlt hist 2017, message=FALSE, warning=FALSE, echo=FALSE}
+
+tlt_ret_hist %>%
+  filter(date >= "2016-7-01") %>%
+  ggplot(aes(x = date, y = returns)) +
+  geom_line() +
+  ggtitle("Monthly returns for TLT since 2016 summer") +
+  theme_bw() +
+  labs(x = "Date", y = "Returns") +
+  scale_y_continuous(breaks = seq(-0.1,0.1,0.02),
+                     labels = scales::percent) +
+  geom_hline(yintercept = 0) +
+  scale_x_date(date_breaks = "2 months", date_labels = "%b%y")
+
+
+```
+
+Interest rates made their lows in the summer of 2016 and since then rates have been moving higher. We saw a big spike up in interest rates after the presidential election as POTUS DJT was considered to be more of a debt guy. During the campaign he had promised to run US like a business, and in the past he was comfortable taking on higher levels of debts when he ran his own businesses.
+
+But since the winter of 2016, monthly returns for long bonds have been steady between the +/- 2% range.
+
+Our trade is based on the idea that this could continue in the future and we could see resonable moves in the rates market. Below you can see the options that we selected for our trade.
+
+```{r optionsdata, message=FALSE, warning=FALSE, echo=FALSE}
+
+tltcall <- read_csv("~/Documents/greenleaf_data/TLT_Aug_8_2018/tlt_dec18_calls.csv")
+tltputs <- read_csv("~/Documents/greenleaf_data/TLT_Aug_8_2018/tlt_dec18_puts.csv")
+tlt_current <- getQuote('TLT')[[2]]
+
+tltcall %>%
+  filter(Strike > 122,
+         Strike < 125) %>%
+  select(index, Strike, Last) %>%
+  rename(Name = index) %>%
+  mutate(Name = "TLT") %>%
+  mutate(Type = "Call") %>%
+  kable(caption = "TLT Dec 2018 Calls") %>%
+  kable_styling(bootstrap_options = "hover")
+
+```
+
+------
+
+```{r options-put-data, warning=FALSE, message=FALSE, echo=FALSE}
+
+tltputs %>%
+  filter(Strike > 112,
+         Strike < 115) %>%
+  select(index, Strike, Last) %>%
+  rename(Name = index) %>%
+  mutate(Name = "TLT") %>%
+  mutate(Type = "Put") %>%
+  kable(caption = "TLT Dec 2018 Puts") %>%
+  kable_styling(bootstrap_options = "hover")
+
+```
+
+
+The trade is as follows :
+
+- Short 123 Call Dec 21 at $1.07
+- Long 124 Call Dec 21 at $0.86
+- Short 114 Put Dec 21 at $1.21
+- Long 113 Put Dec 21 at $0.98
+
+Our total credit on the trade is \$0.44 which is also the maximum profit. Our maximum loss on the trade is $0.56.
+
+We will want the price of TLT to stay range bound for the next 135 days to make our maximum profit.
+
+But this trade has a risk of recency bias. Just because there is lack of volatility does not mean that it will continue to be the same. In the past TLT has moved vigorously. Lets look at the move since 2013 in TLT returns.
+
+```{r returns tlt, warning=FALSE, message=FALSE, echo=FALSE}
+
+tlt_ret_hist %>%
+  ggplot(aes(x = date, y = returns)) +
+  geom_line() +
+  ggtitle("Monthly returns for TLT since 2013") +
+  theme_bw() +
+  labs(x = "Date", y = "Returns") +
+  scale_y_continuous(breaks = seq(-0.1,0.1,0.02),
+                     labels = scales::percent) +
+  geom_hline(yintercept = 0)
+
+
+```
+
+We have seen many spikes in the returns and the range of returns is wider than what we would like to see. But this trade does offer a compelling return, if things remain the same. We will continue to monitor it and may close the trade before expriy, if an when things change.
+
+
+
+
+
+
+
+
+

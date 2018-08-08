@@ -1,0 +1,170 @@
+<div id="financial-modeling" class="section level3">
+<h3>Financial Modeling</h3>
+<div id="calculating-returns-of-individual-securities" class="section level4">
+<h4>Calculating returns of Individual securities</h4>
+<pre class="r"><code>#Loading the package
+
+library(FinCal)
+library(tidyquant)
+library(jrvFinance)
+library(ggthemes)
+library(dygraphs)
+library(timetk)
+library(knitr)
+library(kableExtra)
+library(tibbletime)</code></pre>
+<p>In this chapter we will try and calculate the returns of individual stocks. We will calculate returns for the FAANG stocks.</p>
+<p>First we will calculate returns for single stock -&gt; Netflix</p>
+<pre class="r"><code># We will use the Tidyquant package
+
+netflix &lt;- tq_get(&quot;NFLX&quot;,
+                  from = &#39;2010-01-01&#39;,
+                  get = &quot;stock.prices&quot;)
+netflix</code></pre>
+<pre><code>## # A tibble: 2,164 x 7
+##    date        open  high   low close   volume adjusted
+##    &lt;date&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+##  1 2010-01-04  7.93  7.96  7.57  7.64 17239600     7.64
+##  2 2010-01-05  7.65  7.66  7.26  7.36 23753100     7.36
+##  3 2010-01-06  7.36  7.67  7.20  7.62 23290400     7.62
+##  4 2010-01-07  7.73  7.76  7.46  7.49  9955400     7.49
+##  5 2010-01-08  7.50  7.74  7.47  7.61  8180900     7.61
+##  6 2010-01-11  7.66  7.70  7.53  7.60  6783700     7.60
+##  7 2010-01-12  7.53  7.58  7.45  7.48  6330100     7.48
+##  8 2010-01-13  7.61  7.75  7.56  7.71 14422100     7.71
+##  9 2010-01-14  7.52  7.58  7.27  7.28 17685500     7.28
+## 10 2010-01-15  7.25  7.41  7.23  7.28 13031200     7.28
+## # ... with 2,154 more rows</code></pre>
+<p>Charting the Netflix adjusted price data</p>
+<pre class="r"><code>#Charting the Netflix stock price
+netflix %&gt;%
+  ggplot(aes(x = date, y = adjusted)) +
+  geom_line() +
+  ggtitle(&quot;Price chart Netflix&quot;) +
+  labs(x = &quot;Date&quot;, &quot;Price&quot;)</code></pre>
+<p><img src="Ch2_files/figure-html/netflix%20chart-1.png" width="672" /></p>
+<p>Downloading stock prices for multiple stocks</p>
+<pre class="r"><code>tickers &lt;- c(&quot;FB&quot;, &quot;AMZN&quot;, &quot;AAPL&quot;, &quot;NFLX&quot;, &quot;GOOG&quot;)
+
+multpl_stocks &lt;- tq_get(tickers,
+                        from = &quot;2013-01-01&quot;,
+                        get = &quot;stock.prices&quot;)</code></pre>
+<p>Charting the stock prices for multiple stocks</p>
+<pre class="r"><code>multpl_stocks %&gt;%
+  ggplot(aes(x = date, y = adjusted, color = symbol)) +
+  geom_line() +
+  ggtitle(&quot;Price chart for mutiple stocks&quot;)</code></pre>
+<p><img src="Ch2_files/figure-html/multiple%20stocks%20charting-1.png" width="672" /></p>
+<p>But since these stocks have huge price differences (FB is under 200 and AMZN is above 1800), we will chart each stock on its own scale</p>
+<pre class="r"><code>multpl_stocks %&gt;%
+  ggplot(aes(x = date, y = adjusted)) +
+  geom_line() +
+  facet_wrap(~symbol, scales = &quot;free_y&quot;) +
+  theme_classic() +       # using a new theme
+  labs(x = &quot;Date&quot;, y = &quot;Price&quot;) +
+  ggtitle(&quot;Price chart for mutiple stocks&quot;)</code></pre>
+<p><img src="Ch2_files/figure-html/multiple%20stocks%20charting%20facet-1.png" width="672" /></p>
+<p>Calculating the daily and monthly returns for Netflix</p>
+<pre class="r"><code>#Calculate daily returns
+netflix_daily_returns &lt;- netflix %&gt;%
+  tq_transmute(select = adjusted,
+               mutate_fun = periodReturn,
+               period = &quot;daily&quot;,      # This argument calculates Daily returns
+               col_rename = &quot;nflx_returns&quot;)
+
+#Calculate monthly returns just change the argument &quot;period&quot;
+
+netflix_monthly_returns &lt;- netflix %&gt;%
+  tq_transmute(select = adjusted,
+               mutate_fun = periodReturn,
+               period = &quot;monthly&quot;,      # This argument calculates Monthly returns
+               col_rename = &quot;nflx_returns&quot;)</code></pre>
+<p>Charting the daily and monthly for Netflix</p>
+<pre class="r"><code>netflix_daily_returns %&gt;%
+  ggplot(aes(x = date, y = nflx_returns)) +
+  geom_line() +
+  theme_classic() +
+  labs(x = &quot;Date&quot;, y = &quot;Daily returns&quot;) +
+  ggtitle(&quot;Daily Returns for Netflix&quot;)</code></pre>
+<p><img src="Ch2_files/figure-html/chart%20NFLX%20daily%20returns-1.png" width="672" /></p>
+<pre class="r"><code># Charting the monthly returns for Netflix. Using bar charts
+netflix_monthly_returns %&gt;%
+  ggplot(aes(x = date, y = nflx_returns)) +
+  geom_bar(stat = &quot;identity&quot;) +
+  theme_classic() +
+  labs(x = &quot;Date&quot;, y = &quot;Monthly returns&quot;) +
+  ggtitle(&quot;Monthly Returns for Netflix&quot;) +
+  geom_hline(yintercept = 0) +
+  scale_y_continuous(breaks = seq(-0.6,0.8,0.1),
+                     labels = scales::percent)</code></pre>
+<p><img src="Ch2_files/figure-html/chart%20NFLX%20monthly%20returns-1.png" width="672" /></p>
+<p>Calculating the returns for multiple stocks</p>
+<pre class="r"><code>#Calculating the daily returns for multiple stocks
+
+multpl_stock_daily_returns &lt;- multpl_stocks %&gt;%
+  group_by(symbol) %&gt;%
+  tq_transmute(select = adjusted,
+               mutate_fun = periodReturn,
+               period = &#39;daily&#39;,
+               col_rename = &#39;returns&#39;)
+
+#Calculating the monthly returns for multiple stocks
+
+multpl_stock_monthly_returns &lt;- multpl_stocks %&gt;%
+  group_by(symbol) %&gt;%
+  tq_transmute(select = adjusted,
+               mutate_fun = periodReturn,
+               period = &#39;monthly&#39;,
+               col_rename = &#39;returns&#39;)</code></pre>
+<p>Charting the returns for multiple stocks</p>
+<pre class="r"><code>multpl_stock_daily_returns %&gt;%
+  ggplot(aes(x = date, y = returns, fill = symbol)) +
+  geom_line() +
+  facet_wrap(~symbol, scales = &quot;free_y&quot;) +
+  scale_y_continuous(labels = scales::percent) +
+  ggtitle(&quot;Daily returns for FAANG stock&quot;) +
+  labs(x = &quot;Date&quot;, y = &quot;Returns&quot;)</code></pre>
+<p><img src="Ch2_files/figure-html/chart%20mult%20daily%20returns-1.png" width="672" /></p>
+<pre class="r"><code>multpl_stock_monthly_returns %&gt;%
+  ggplot(aes(x = date, y = returns, fill = symbol)) +
+  geom_line() +
+  facet_wrap(~symbol, scales = &quot;free_y&quot;) +
+  scale_y_continuous(labels = scales::percent) +
+  ggtitle(&quot;Monthly returns for FAANG stock&quot;) +
+  labs(x = &quot;Date&quot;, y = &quot;Returns&quot;)</code></pre>
+<p><img src="Ch2_files/figure-html/chart%20mult%20monthly%20returns-1.png" width="672" /></p>
+<p>Caluating the cumulative returns for the Netflix stock</p>
+<pre class="r"><code>netflix_daily_returns %&gt;%
+  mutate(cr = cumprod(1 + nflx_returns)) %&gt;%
+  mutate(cumulative_returns = cr - 1) %&gt;%
+  ggplot(aes(x = date, y = cumulative_returns)) +
+  geom_line() +
+  theme_classic() +
+  labs(x = &quot;Date&quot;, y = &quot;Cumulative Returns&quot;) +
+  ggtitle(&quot;Cumulative returns for Netflix since 2010&quot;)</code></pre>
+<p><img src="Ch2_files/figure-html/chart%20cum%20NFLX%20daily%20returns-1.png" width="672" /></p>
+<pre class="r"><code>netflix_monthly_returns %&gt;%
+  mutate(cr = cumprod(1 + nflx_returns)) %&gt;%
+  mutate(cumulative_returns = cr - 1) %&gt;%
+  ggplot(aes(x = date, y = cumulative_returns)) +
+  geom_line() +
+  theme_classic() +
+  labs(x = &quot;Date&quot;, y = &quot;Cumulative Returns&quot;) +
+  ggtitle(&quot;Cumulative returns for Netflix since 2010&quot;)</code></pre>
+<p><img src="Ch2_files/figure-html/chart%20cum%20NFLX%20monthly%20returns-1.png" width="672" /></p>
+<p>We can see that monthly returns are much smoother.</p>
+<pre class="r"><code>multpl_stock_monthly_returns %&gt;%
+  mutate(returns = if_else(date == &quot;2013-01-31&quot;, 0, returns)) %&gt;%
+  group_by(symbol) %&gt;%  # Need to group multiple stocks
+  mutate(cr = cumprod(1 + returns)) %&gt;%
+  mutate(cumulative_returns = cr - 1) %&gt;%
+  ggplot(aes(x = date, y = cumulative_returns, color = symbol)) +
+  geom_line() +
+  theme_economist() +
+  labs(x = &quot;Date&quot;, y = &quot;Cumulative Returns&quot;) +
+  ggtitle(&quot;Cumulative returns for all since 2013&quot;) +
+  scale_y_continuous(breaks = seq(0,20,2),
+                     labels = scales::percent)</code></pre>
+<p><img src="Ch2_files/figure-html/chart%20cum%20multi%20daily%20returns-1.png" width="672" /></p>
+</div>
+</div>
